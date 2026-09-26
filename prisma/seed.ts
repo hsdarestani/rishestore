@@ -1,4 +1,7 @@
 import { PrismaClient, ProductKind } from "@prisma/client";
+import { readFileSync } from "fs";
+import { gunzipSync } from "zlib";
+import path from "path";
 
 const db = new PrismaClient();
 
@@ -10,22 +13,35 @@ const categories = [
   { slug: "grains-seasonings", name: "غلات و چاشنی‌ها", description: "غلات، پرک‌ها و چاشنی‌های ساده برای آشپزخانه روزمره.", sort: 5 },
 ];
 
-const products = [
-  ["rice-hashemi", "برنج ایرانی", "rice", "برنج ایرانی برای مصرف روزانه؛ صفحه محصول برای ثبت مبدأ، وزن، نتیجه پخت و اطلاعات دقیق هر سری آماده است.", "پیش از خرید، وزن، مبدأ و اطلاعات همان سری محصول را بررسی کنید.", "پلو و مصرف روزانه"],
-  ["gilan-tea", "چای ایرانی گیلان", "tea", "چای ایرانی با تمرکز بر تجربه واقعی دم‌آوری، عطر و رنگ طبیعی.", "اطلاعات هر سری چای، شیوه نگهداری و نکات دم‌آوری در همین صفحه ثبت می‌شود.", "دم‌آوری روزانه"],
-  ["natural-honey", "عسل طبیعی", "honey", "عسل ایرانی با اطلاعات شفاف محصول و راهنمای نگهداری.", "شکرک‌زدن به‌تنهایی معیار قطعی طبیعی یا تقلبی بودن عسل نیست؛ اطلاعات هر سری محصول را در همین صفحه ببینید.", "صبحانه و مصرف روزانه"],
-  ["dry-corn", "ذرت خشک", "grains-seasonings", "ذرت خشک برای پخت، آش و غذاهای خانگی.", "زمان پخت به نوع محصول و روش خیساندن بستگی دارد.", "آش، سوپ و پخت"],
-  ["iranian-chickpeas", "نخود ایرانی", "legumes", "نخود ایرانی برای آبگوشت، فلافل و خوراک.", "برای نتیجه بهتر، روش خیساندن و پخت متناسب با غذا را رعایت کنید.", "آبگوشت، فلافل و خوراک"],
-  ["pinto-beans", "لوبیا چیتی", "legumes", "لوبیا چیتی برای خوراک و غذاهای ایرانی.", "مشخصات پخت و اطلاعات هر سری محصول پیش از خرید در صفحه محصول تکمیل می‌شود.", "خوراک و غذاهای ایرانی"],
-  ["red-beans", "لوبیا قرمز", "legumes", "لوبیا قرمز برای خوراک و انواع غذاهای خانگی.", "وزن، مبدأ و اطلاعات کیفیت هر سری محصول به‌صورت شفاف نمایش داده می‌شود.", "خوراک و پخت"],
-  ["dry-broad-beans", "باقالی خشک", "legumes", "باقالی خشک برای پخت و غذاهای سنتی.", "روش خیساندن و زمان پخت را متناسب با دستور غذا تنظیم کنید.", "پخت و غذاهای سنتی"],
-  ["local-lentils", "عدس محلی", "legumes", "عدس برای عدسی، آش و غذاهای روزانه.", "ریشه تلاش می‌کند اطلاعات محصول را به‌جای شعار، در همان صفحه خرید روشن و قابل بررسی نگه دارد.", "عدسی، آش و پخت"],
-  ["red-lentils", "عدس قرمز", "legumes", "عدس قرمز با زمان پخت متفاوت از عدس معمولی.", "برای سوپ، پوره و غذاهایی که بافت نرم‌تر می‌خواهند مناسب است.", "سوپ و پوره"],
-  ["iranian-split-peas", "لپه ایرانی", "legumes", "لپه برای خورش قیمه و غذاهای ایرانی.", "اطلاعات وزن، موجودی و کیفیت هر سری محصول در صفحه خرید ثبت می‌شود.", "خورش قیمه و پخت"],
-  ["dried-mint", "نعناع خشک", "grains-seasonings", "نعناع خشک ایرانی برای آشپزی و چاشنی.", "در ظرف دربسته، دور از رطوبت و نور مستقیم نگهداری شود.", "چاشنی و آشپزی"],
-  ["oat-flakes", "پرک جو", "grains-seasonings", "پرک جو برای صبحانه و اوتمیل.", "روش آماده‌سازی می‌تواند بر اساس بافت دلخواه و دستور مصرف تغییر کند.", "صبحانه و اوتمیل"],
-  ["wheat-flakes", "پرک گندم", "grains-seasonings", "پرک گندم برای صبحانه و ترکیب‌های ساده آشپزخانه.", "برای انتخاب بین پرک جو و پرک گندم، کاربرد و بافت موردنظر را در نظر بگیرید.", "صبحانه و پخت"],
-];
+const legacyMap: Record<string, { slug: string; category: string }> = {
+  "113": { slug: "natural-honey", category: "honey" },
+  "124": { slug: "iranian-chickpeas", category: "legumes" },
+  "139": { slug: "pinto-beans", category: "legumes" },
+  "147": { slug: "large-lentils", category: "legumes" },
+  "210": { slug: "rice-hashemi", category: "rice" },
+  "228": { slug: "local-lentils", category: "legumes" },
+  "249": { slug: "popcorn-corn", category: "grains-seasonings" },
+  "251": { slug: "gilan-tea", category: "tea" },
+  "255": { slug: "red-beans", category: "legumes" },
+  "256": { slug: "iranian-split-peas", category: "legumes" },
+  "258": { slug: "dry-broad-beans", category: "legumes" },
+  "421": { slug: "gilan-tea-with-stem", category: "tea" },
+  "422": { slug: "dried-mint", category: "grains-seasonings" },
+  "423": { slug: "oat-flakes", category: "grains-seasonings" },
+  "424": { slug: "wheat-flakes", category: "grains-seasonings" },
+};
+
+function legacyData(): Record<string, any> {
+  const file = path.join(process.cwd(), "data", "product-content.json.gz");
+  return JSON.parse(gunzipSync(readFileSync(file)).toString("utf8"));
+}
+
+function localImage(id: string, url: string) {
+  if (!url) return null;
+  const match = url.match(/\.([a-zA-Z0-9]{2,5})(?:\?|$)/);
+  const ext = (match?.[1] || "jpg").toLowerCase();
+  return "/brand/products/legacy-" + id + "." + ext;
+}
 
 const pages = [
   {
@@ -33,7 +49,7 @@ const pages = [
     title: "چرا ریشه؟",
     kicker: "انتخاب روشن‌تر",
     excerpt: "روایت اصالت، مستقیم از مزرعه پدری",
-    content: "ما در «ریشه» کیفیت را فدای ظاهر نمی‌کنیم. هر محصول، پیش از رسیدن به دست شما، در آشپزخانه ما پخته و سنجیده می‌شود تا طعم واقعی و بی‌آلایش محصول به سفره برسد.\n\nدر نسخه جدید فروشگاه، این روایت فقط یک شعار نیست. وزن، قیمت، موجودی، مبدأ، کاربرد و توضیحات کیفیت هر محصول در همان صفحه خرید کنار هم قرار می‌گیرند تا تصمیم‌گیری ساده‌تر باشد.\n\n«به شرط پخت» بخشی از وعده کیفیت ریشه است. شرایط دقیق هر محصول باید در همان صفحه محصول نوشته شود تا مشتری بداند چه چیزی را می‌خرد و در صورت مغایرت چطور موضوع را برای بررسی ثبت کند."
+    content: "ما در «ریشه» کیفیت را فدای ظاهر نمی‌کنیم. هر محصول، پیش از رسیدن به دست شما، در آشپزخانه ما پخته و سنجیده می‌شود تا طعم واقعی و بی‌آلایش محصول به سفره برسد.\n\nدر نسخه جدید فروشگاه، این روایت فقط یک شعار نیست. وزن، قیمت، موجودی، مبدأ، کاربرد و توضیحات کیفیت هر محصول در همان صفحه خرید کنار هم قرار می‌گیرند تا تصمیم‌گیری ساده‌تر باشد.\n\n«به شرط پخت» بخشی از وعده کیفیت ریشه است. شرایط دقیق هر محصول در همان صفحه محصول نوشته می‌شود تا مشتری بداند چه چیزی را می‌خرد و در صورت مغایرت چطور موضوع را برای بررسی ثبت کند."
   },
   {
     slug: "about",
@@ -54,7 +70,7 @@ const pages = [
     title: "بررسی و بازگشت سفارش",
     kicker: "پشتیبانی سفارش",
     excerpt: "اگر سفارشتان با اطلاعات اعلام‌شده تطابق نداشت، موضوع را با شماره سفارش ثبت کنید.",
-    content: "برای بررسی یک سفارش، شماره سفارش، شماره تماس و شرح دقیق مسئله را آماده کنید.\n\nشرایط هر محصول و تعهدهای مرتبط با کیفیت باید در همان صفحه محصول قابل مشاهده باشد. از تعیین بازه یا شرطی که در فروشگاه ثبت نشده خودداری می‌کنیم؛ نتیجه بررسی بر اساس اطلاعات سفارش و مشخصات اعلام‌شده محصول انجام می‌شود."
+    content: "برای بررسی یک سفارش، شماره سفارش، شماره تماس و شرح دقیق مسئله را آماده کنید.\n\nشرایط هر محصول و تعهدهای مرتبط با کیفیت در همان صفحه محصول قابل مشاهده است. نتیجه بررسی بر اساس اطلاعات سفارش و مشخصاتی انجام می‌شود که هنگام خرید برای محصول نمایش داده شده بود."
   },
   {
     slug: "contact",
@@ -66,160 +82,150 @@ const pages = [
 ];
 
 const posts = [
-  {
-    slug: "authenticity-quality-guide",
-    title: "راهنمای تشخیص اصالت و کیفیت مواد غذایی",
-    excerpt: "از ظاهر محصول تا نتیجه پخت؛ چه نشانه‌هایی برای یک انتخاب بهتر ارزش بررسی دارند؟",
-    keywords: "اصالت,کیفیت,راهنمای خرید,تست پخت",
-    content: "کیفیت مواد غذایی را نمی‌توان با یک نشانه واحد سنجید. ظاهر، بو، بافت، اطلاعات مبدأ، شرایط نگهداری و نتیجه پخت هرکدام بخشی از تصویر هستند.\n\nبرای خرید آنلاین، اطلاعات شفاف محصول اهمیت بیشتری پیدا می‌کند: وزن، موجودی، مبدأ در صورت امکان، کاربرد و توضیح کیفیت باید کنار قیمت دیده شوند.\n\nریشه این راهنماها را به صفحات محصول متصل می‌کند تا محتوای آموزشی مستقیماً به انتخاب آگاهانه‌تر کمک کند.",
-    healthDisclaimer: false
-  },
-  {
-    slug: "iranian-rice-buying-guide",
-    title: "راهنمای خرید برنج ایرانی",
-    excerpt: "برای انتخاب برنج خوب، فقط به ظاهر دانه نگاه نکنید.",
-    keywords: "برنج ایرانی,راهنمای خرید برنج,کیفیت برنج",
-    content: "در خرید برنج، نام رقم تنها بخشی از تصمیم است. یکنواختی دانه، عطر، روش نگهداری و مهم‌تر از همه نتیجه پخت باید در کنار هم دیده شوند.\n\nاگر محصولی با وعده مشخص درباره پخت عرضه می‌شود، شرایط آن وعده باید روشن باشد. صفحه محصول جای اصلی برای ثبت وزن، مبدأ، قیمت و توضیح هر سری برنج است.",
-    healthDisclaimer: false
-  },
-  {
-    slug: "gilan-tea-guide",
-    title: "راهنمای خرید و نگهداری چای ایرانی",
-    excerpt: "چای خوب را با تجربه دم‌آوری و اطلاعات روشن محصول بشناسید.",
-    keywords: "چای ایرانی,چای گیلان,راهنمای خرید چای",
-    content: "رنگ بسیار تیره و سریع همیشه به‌معنای کیفیت بالاتر نیست. برای ارزیابی چای، عطر، طعم، زمان دم‌آوری و اطلاعات محصول را کنار هم ببینید.\n\nچای را دور از رطوبت و بوهای قوی و در ظرف مناسب نگهداری کنید تا عطر آن کمتر آسیب ببیند.",
-    healthDisclaimer: false
-  },
-  {
-    slug: "natural-honey-guide",
-    title: "راهنمای شناخت و نگهداری عسل",
-    excerpt: "چرا یک نشانه واحد برای قضاوت درباره عسل کافی نیست؟",
-    keywords: "عسل طبیعی,تشخیص عسل,نگهداری عسل",
-    content: "برای تشخیص کیفیت عسل نباید فقط به شکرک‌زدن، رنگ یا غلظت تکیه کرد. ویژگی‌های عسل به منبع شهد و شرایط نگهداری وابسته‌اند.\n\nاگر درباره یک ویژگی آزمایشگاهی یا ادعای سلامت صحبت می‌شود، باید منبع معتبر و اطلاعات همان محصول در دسترس باشد. این راهنما جایگزین توصیه پزشکی نیست.",
-    healthDisclaimer: true
-  },
-  {
-    slug: "legumes-storage-guide",
-    title: "روش نگهداری حبوبات در خانه",
-    excerpt: "چطور حبوبات را خشک، تمیز و دور از رطوبت نگه داریم.",
-    keywords: "حبوبات,نگهداری,نخود,عدس,لوبیا",
-    content: "حبوبات خشک را در ظرف تمیز و دربسته، دور از رطوبت و گرمای زیاد نگهداری کنید. خرید به‌اندازه مصرف و بررسی دوره‌ای موجودی آشپزخانه کمک می‌کند محصول مدت طولانی بی‌استفاده نماند.\n\nاگر زمان پخت نسبت به همیشه تغییر محسوسی داشت، سن محصول و شرایط نگهداری می‌تواند یکی از عوامل باشد.",
-    healthDisclaimer: false
-  },
+  { slug: "authenticity-quality-guide", title: "راهنمای تشخیص اصالت و کیفیت مواد غذایی", excerpt: "از ظاهر محصول تا نتیجه پخت؛ چه نشانه‌هایی برای یک انتخاب بهتر ارزش بررسی دارند؟", keywords: "اصالت,کیفیت,راهنمای خرید,تست پخت", content: "کیفیت مواد غذایی را نمی‌توان با یک نشانه واحد سنجید. ظاهر، بو، بافت، اطلاعات مبدأ، شرایط نگهداری و نتیجه پخت هرکدام بخشی از تصویر هستند.\n\nبرای خرید آنلاین، اطلاعات شفاف محصول اهمیت بیشتری پیدا می‌کند: وزن، موجودی، مبدأ در صورت امکان، کاربرد و توضیح کیفیت باید کنار قیمت دیده شوند.", healthDisclaimer: false },
+  { slug: "iranian-rice-buying-guide", title: "راهنمای خرید برنج ایرانی", excerpt: "برای انتخاب برنج خوب، فقط به ظاهر دانه نگاه نکنید.", keywords: "برنج ایرانی,راهنمای خرید برنج,کیفیت برنج", content: "در خرید برنج، نام رقم تنها بخشی از تصمیم است. یکنواختی دانه، عطر، روش نگهداری و مهم‌تر از همه نتیجه پخت باید در کنار هم دیده شوند.", healthDisclaimer: false },
+  { slug: "gilan-tea-guide", title: "راهنمای خرید و نگهداری چای ایرانی", excerpt: "چای خوب را با تجربه دم‌آوری و اطلاعات روشن محصول بشناسید.", keywords: "چای ایرانی,چای گیلان,راهنمای خرید چای", content: "رنگ بسیار تیره و سریع همیشه به‌معنای کیفیت بالاتر نیست. برای ارزیابی چای، عطر، طعم، زمان دم‌آوری و اطلاعات محصول را کنار هم ببینید.", healthDisclaimer: false },
+  { slug: "natural-honey-guide", title: "راهنمای شناخت و نگهداری عسل", excerpt: "چرا یک نشانه واحد برای قضاوت درباره عسل کافی نیست؟", keywords: "عسل طبیعی,تشخیص عسل,نگهداری عسل", content: "برای تشخیص کیفیت عسل نباید فقط به شکرک‌زدن، رنگ یا غلظت تکیه کرد. ویژگی‌های عسل به منبع شهد و شرایط نگهداری وابسته‌اند.\n\nاین راهنما جایگزین توصیه پزشکی نیست.", healthDisclaimer: true },
+  { slug: "legumes-storage-guide", title: "روش نگهداری حبوبات در خانه", excerpt: "چطور حبوبات را خشک، تمیز و دور از رطوبت نگه داریم.", keywords: "حبوبات,نگهداری,نخود,عدس,لوبیا", content: "حبوبات خشک را در ظرف تمیز و دربسته، دور از رطوبت و گرمای زیاد نگهداری کنید.", healthDisclaimer: false },
 ];
 
 const faqs = [
-  ["اطلاعات هر محصول را کجا ببینم؟", "وزن، قیمت، موجودی، توضیح کوتاه، کاربرد و هر اطلاعات ثبت‌شده درباره مبدأ یا کیفیت در همان صفحه محصول نمایش داده می‌شود.", 1],
-  ["«به شرط پخت» در ریشه یعنی چه؟", "این عبارت بخشی از وعده کیفیت ریشه است. جزئیات قابل استناد هر محصول باید در صفحه همان محصول نوشته شود. اگر سفارش با مشخصات اعلام‌شده تطابق نداشت، شماره سفارش و شرح مسئله را برای بررسی ارسال کنید.", 2],
+  ["اطلاعات هر محصول را کجا ببینم؟", "وزن، قیمت، موجودی، روایت محصول، مشخصات، نتیجه تست، ضمانت و سوالات مرتبط در همان صفحه محصول نمایش داده می‌شود.", 1],
+  ["«به شرط پخت» در ریشه یعنی چه؟", "این عبارت بخشی از وعده کیفیت ریشه است. جزئیات دقیق ضمانت هر محصول در صفحه همان محصول نوشته شده است.", 2],
   ["هزینه ارسال چطور مشخص می‌شود؟", "هزینه ارسال بر اساس تنظیمات فعال فروشگاه محاسبه می‌شود و پیش از پرداخت در خلاصه سفارش نمایش داده خواهد شد.", 3],
-  ["پرداخت سفارش چگونه انجام می‌شود؟", "پرداخت آنلاین از درگاه متصل به فروشگاه انجام می‌شود. مبلغ نهایی شامل کالا و هزینه ارسال پیش از انتقال به درگاه نمایش داده می‌شود.", 4],
-  ["چطور سفارشم را پیگیری کنم؟", "در صفحه پیگیری سفارش، کد سفارش و همان شماره موبایلی را که هنگام خرید وارد کرده‌اید ثبت کنید تا آخرین وضعیت سفارش نمایش داده شود.", 5],
-  ["اگر سفارش نیاز به بررسی داشت چه کنم؟", "شماره سفارش، شماره تماس و شرح دقیق مسئله را برای پشتیبانی بفرستید. بررسی بر اساس اطلاعات سفارش و مشخصاتی انجام می‌شود که هنگام خرید برای محصول نمایش داده شده بود.", 6],
-  ["قیمت و موجودی محصولات چه زمانی قطعی است؟", "قیمت و موجودی نمایش‌داده‌شده در صفحه محصول و سبد خرید مبنای ثبت سفارش است. محصول بدون قیمت یا موجودی فعال به سبد خرید اضافه نمی‌شود.", 7],
+  ["پرداخت سفارش چگونه انجام می‌شود؟", "پرداخت آنلاین از درگاه زیبال انجام می‌شود. مبلغ نهایی پیش از انتقال به درگاه نمایش داده می‌شود.", 4],
+  ["چطور سفارشم را پیگیری کنم؟", "در صفحه پیگیری سفارش، کد سفارش و همان شماره موبایلی را که هنگام خرید وارد کرده‌اید ثبت کنید.", 5],
 ];
 
 async function main() {
   const categoryMap = new Map<string, string>();
   for (const category of categories) {
-    const row = await db.category.upsert({
-      where: { slug: category.slug },
-      create: category,
-      update: {},
-    });
+    const row = await db.category.upsert({ where: { slug: category.slug }, create: category, update: {} });
     categoryMap.set(category.slug, row.id);
   }
 
-  for (const [slug, name, categorySlug, shortDescription, description, usage] of products) {
-    await db.product.upsert({
-      where: { slug },
-      create: {
-        slug,
-        name,
-        shortDescription,
-        description,
-        usage,
-        categoryId: categoryMap.get(categorySlug),
-        quality: "اطلاعات کیفیت و نتیجه بررسی هر سری محصول از پنل مدیریت تکمیل می‌شود.",
-        guarantee: "جزئیات تعهد کیفیت هر محصول باید پیش از فعال شدن خرید در همین صفحه ثبت شود.",
-        price: 0,
-        stock: 0,
-        active: true,
-      },
-      update: {},
-    });
-  }
+  const snapshotImported = await db.setting.findUnique({ where: { key: "legacyProductSnapshotImported" } });
+  const legacy = legacyData();
 
-  const brandImages: Record<string, string> = {
-    "rice-hashemi": "/brand/products/rice.png",
-    "gilan-tea": "/brand/products/tea.png",
-    "natural-honey": "/brand/products/honey.jpg",
-    "dry-corn": "/brand/products/corn.png",
-    "iranian-chickpeas": "/brand/products/chickpeas.png",
-    "pinto-beans": "/brand/products/pinto-beans.png",
-    "red-beans": "/brand/products/red-beans.png",
-    "dry-broad-beans": "/brand/products/broad-beans.png",
-    "local-lentils": "/brand/products/lentils-small.png",
-    "red-lentils": "/brand/products/lentils-large.png",
-    "iranian-split-peas": "/brand/products/split-peas.png"
-  };
+  for (const [id, content] of Object.entries(legacy)) {
+    const map = legacyMap[id];
+    if (!map) continue;
+    const hero = content.hero || {};
+    const woo = content.woo_snapshot || {};
+    const price = Math.max(0, Math.trunc(Number(woo.price || woo.regular_price || 0)));
+    const stock = Math.max(0, Math.trunc(Number(woo.stock || 0)));
+    const weightGrams = Math.max(0, Math.round(Number(woo.weight || 0) * 1000)) || null;
+    const name = String(hero.display_title || "").trim() || "محصول ریشه " + id;
+    const image = localImage(id, String(hero.image_url || ""));
+    const categoryId = categoryMap.get(map.category) || null;
+    const description = String(hero.story || "").trim() || String(hero.myth || "").trim() || name;
+    const allowBackorder = String(woo.stock_status || "") === "onbackorder";
 
-  for (const [slug, image] of Object.entries(brandImages)) {
-    const product = await db.product.findUnique({ where: { slug } });
-    if (product && !product.image) {
-      await db.product.update({ where: { id: product.id }, data: { image } });
+    let product = await db.product.findFirst({ where: { OR: [{ legacyProductId: Number(id) }, { slug: map.slug }] } });
+    if (!product) {
+      product = await db.product.create({
+        data: {
+          legacyProductId: Number(id),
+          slug: map.slug,
+          name,
+          shortDescription: String(hero.myth || description).slice(0, 500),
+          description,
+          price,
+          stock,
+          stockStatus: String(woo.stock_status || ""),
+          allowBackorder,
+          sourceUrl: String(content.source_url || "") || null,
+          legacyContent: content,
+          weightGrams,
+          image,
+          categoryId,
+          active: true,
+        },
+      });
+    } else {
+      product = await db.product.update({
+        where: { id: product.id },
+        data: {
+          legacyProductId: Number(id),
+          name,
+          categoryId,
+          sourceUrl: String(content.source_url || "") || null,
+          legacyContent: content,
+          shortDescription: product.shortDescription || String(hero.myth || description).slice(0, 500),
+          description: product.description || description,
+          image: product.image || image,
+          weightGrams: product.weightGrams || weightGrams,
+          ...(snapshotImported ? {} : {
+            price,
+            stock,
+            stockStatus: String(woo.stock_status || ""),
+            allowBackorder,
+          }),
+        },
+      });
     }
   }
 
-  for (const page of pages) {
-    await db.page.upsert({ where: { slug: page.slug }, create: page, update: {} });
+  if (!snapshotImported) {
+    await db.setting.create({ data: { key: "legacyProductSnapshotImported", value: new Date().toISOString() } });
   }
 
-  for (const post of posts) {
-    await db.post.upsert({ where: { slug: post.slug }, create: post, update: {} });
+  await db.product.updateMany({ where: { slug: "red-lentils", legacyProductId: null }, data: { active: false } }).catch(() => undefined);
+
+  const mainWarehouse = await db.warehouse.upsert({
+    where: { code: "MAIN" },
+    create: { code: "MAIN", name: "انبار اصلی ریشه", address: "کرج، محمدشهر، بلوار دشت بهشت" },
+    update: {},
+  });
+
+  for (const product of await db.product.findMany({ where: { legacyProductId: { not: null } } })) {
+    const existing = await db.inventoryBatch.findFirst({ where: { warehouseId: mainWarehouse.id, productId: product.id } });
+    if (!existing && product.stock > 0) {
+      await db.inventoryBatch.create({
+        data: {
+          warehouseId: mainWarehouse.id,
+          productId: product.id,
+          batchCode: "LEGACY-" + product.legacyProductId,
+          quantity: product.stock,
+          unitCost: 0,
+          notes: "موجودی منتقل‌شده از فروشگاه قبلی",
+        },
+      });
+      await db.inventoryMovement.create({
+        data: {
+          warehouseId: mainWarehouse.id,
+          productId: product.id,
+          type: "opening_balance",
+          quantity: product.stock,
+          unitCost: 0,
+          referenceType: "legacy_snapshot",
+          referenceId: String(product.legacyProductId),
+        },
+      });
+    }
   }
 
+  for (const page of pages) await db.page.upsert({ where: { slug: page.slug }, create: page, update: {} });
+  for (const post of posts) await db.post.upsert({ where: { slug: post.slug }, create: post, update: {} });
   for (const [question, answer, sort] of faqs) {
-    await db.faq.upsert({
-      where: { question: String(question) },
-      create: { question: String(question), answer: String(answer), sort: Number(sort) },
-      update: {},
-    });
+    await db.faq.upsert({ where: { question: String(question) }, create: { question: String(question), answer: String(answer), sort: Number(sort) }, update: {} });
   }
 
-  const defaults = {
+  for (const [key, value] of Object.entries({
     storeName: "ریشه",
     storePhone: "",
     instagramUrl: "",
     shippingFlatRate: "0",
     freeShippingThreshold: "0",
-  };
-
-  for (const [key, value] of Object.entries(defaults)) {
+  })) {
     await db.setting.upsert({ where: { key }, create: { key, value }, update: {} });
   }
 
-  const packDrafts = [
-    ["starter-pack", "پک شروع ریشه", "چند انتخاب پایه برای آشنایی با محصولات ریشه."],
-    ["kitchen-pack", "پک آشپزخانه", "ترکیبی ساده برای مصرف روزمره آشپزخانه."],
-    ["breakfast-pack", "پک صبحانه", "ترکیبی برای صبحانه؛ جزئیات محتوا و قیمت از پنل تکمیل می‌شود."],
-  ];
-
-  for (const [slug, name, shortDescription] of packDrafts) {
-    await db.product.upsert({
-      where: { slug },
-      create: {
-        slug,
-        name,
-        shortDescription,
-        description: shortDescription,
-        kind: ProductKind.PACK,
-        price: 0,
-        stock: 0,
-        active: false,
-      },
-      update: {},
-    });
-  }
+  await db.treasuryProvider.upsert({
+    where: { code: "zibal" },
+    create: { publicId: "provider-zibal", code: "zibal", name: "زیبال", adapter: "zibal", active: true },
+    update: { active: true },
+  });
 }
 
 main()

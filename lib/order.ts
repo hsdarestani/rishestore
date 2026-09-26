@@ -17,18 +17,13 @@ export async function calculateOrder(lines: CartLineInput[]) {
   const items = normalized.map((line) => {
     const product = productMap.get(line.productId);
     if (!product || product.price <= 0) throw new Error("INVALID_PRODUCT");
-    if (product.stock < line.quantity) throw new Error("OUT_OF_STOCK:" + (product?.name || line.productId));
-    return {
-      product,
-      quantity: line.quantity,
-      total: product.price * line.quantity,
-    };
+    if (!product.allowBackorder && product.stock < line.quantity) throw new Error("OUT_OF_STOCK:" + (product?.name || line.productId));
+    return { product, quantity: line.quantity, total: product.price * line.quantity };
   });
 
   const subtotal = items.reduce((sum, item) => sum + item.total, 0);
   const config = await getStoreConfig();
-  const shippingCost =
-    config.freeShippingThreshold > 0 && subtotal >= config.freeShippingThreshold ? 0 : config.shippingFlatRate;
+  const shippingCost = config.freeShippingThreshold > 0 && subtotal >= config.freeShippingThreshold ? 0 : config.shippingFlatRate;
   return { items, subtotal, shippingCost, total: subtotal + shippingCost, config };
 }
 

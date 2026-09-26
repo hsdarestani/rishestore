@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@/app/globals.css";
 import { CartProvider } from "@/components/CartProvider";
 import SiteChrome from "@/components/SiteChrome";
+import MotionController from "@/components/MotionController";
 import { getStoreConfig } from "@/lib/settings";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://new.rishe.store";
@@ -22,6 +23,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="fa" dir="rtl">
       <body>
         <CartProvider>
+          <MotionController />
           <SiteChrome storeName={config.storeName} phone={config.storePhone} instagram={config.instagramUrl}>
             {children}
           </SiteChrome>

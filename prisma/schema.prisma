@@ -40,6 +40,7 @@ model User {
   email        String?   @unique
   passwordHash String
   role         UserRole  @default(CUSTOMER)
+  permissions  Json?
   orders       Order[]
   addresses    Address[]
   auditLogs    AuditLog[]
@@ -73,6 +74,7 @@ model Category {
 
 model Product {
   id               String              @id @default(cuid())
+  legacyProductId  Int?                @unique
   slug             String              @unique
   name             String
   kind             ProductKind         @default(PRODUCT)
@@ -82,6 +84,10 @@ model Product {
   compareAt        Int?
   weightGrams      Int?
   stock            Int                 @default(0)
+  stockStatus      String?
+  allowBackorder   Boolean             @default(false)
+  sourceUrl        String?
+  legacyContent    Json?
   origin           String?
   usage            String?
   quality          String?
@@ -574,6 +580,666 @@ model AuditLog {
 
   @@index([entityType, entityId])
   @@index([createdAt])
+}
+
+
+model Customer {
+  id               String   @id @default(cuid())
+  customerKey      String   @unique
+  mobileNormalized String?  @unique
+  name             String?
+  email            String?
+  status           String   @default("active")
+  province         String?
+  city             String?
+  sourceCode       String?
+  firstPurchase    DateTime?
+  lastPurchase     DateTime?
+  metadata         Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+}
+
+model CustomerChannel {
+  id                 String   @id @default(cuid())
+  customerId         String
+  channel            String
+  externalCustomerId String
+  createdAt          DateTime @default(now())
+
+  @@unique([channel, externalCustomerId])
+  @@index([customerId])
+}
+
+model ChannelPrice {
+  id        String   @id @default(cuid())
+  productId String
+  channel   String
+  price     Int
+  active    Boolean  @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId, channel, active])
+}
+
+model Promotion {
+  id          String   @id @default(cuid())
+  promotionKey String  @unique
+  code        String?  @unique
+  name        String
+  channel     String?
+  type        String
+  value       Int
+  minSubtotal Int       @default(0)
+  maxUses     Int?
+  perCustomer Int?
+  active      Boolean   @default(true)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model PromotionRedemption {
+  id          String   @id @default(cuid())
+  promotionId String
+  orderId     String
+  customerId  String?
+  amount      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@unique([promotionId, orderId])
+  @@index([promotionId, customerId])
+}
+
+model LoyaltyEntry {
+  id         String   @id @default(cuid())
+  entryKey   String   @unique
+  customerId String
+  orderId    String?
+  points     Int
+  reason     String?
+  expiresAt  DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([customerId, createdAt])
+}
+
+model OrderHistory {
+  id        String   @id @default(cuid())
+  orderId   String
+  fromState String?
+  toState   String
+  reason    String?
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+model InventoryReservation {
+  id          String   @id @default(cuid())
+  reservationKey String @unique
+  orderId     String?
+  warehouseId String
+  productId   String
+  batchId     String?
+  quantity    Int
+  status      String   @default("active")
+  expiresAt   DateTime?
+  committedAt DateTime?
+  releasedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([orderId, status])
+  @@index([warehouseId, productId, status])
+}
+
+model EventSaleEvent {
+  id          String   @id @default(cuid())
+  publicId    String   @unique
+  name        String
+  status      String   @default("draft")
+  warehouseId String?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  location    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model EventSeller {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  displayName String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, userId])
+}
+
+model EventDeviceSession {
+  id          String   @id @default(cuid())
+  tokenHash   String   @unique
+  eventId     String
+  sellerUserId String?
+  deviceName  String?
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  lastSeenAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([eventId, expiresAt])
+}
+
+model EventSale {
+  id            String   @id @default(cuid())
+  publicId      String   @unique
+  clientUuid    String   @unique
+  eventId       String
+  sellerUserId  String?
+  customerId    String?
+  customerName  String?
+  mobile        String?
+  status        String   @default("completed")
+  paymentType   String?
+  subtotal      Int
+  discount      Int      @default(0)
+  total         Int
+  occurredAt    DateTime
+  syncedAt      DateTime @default(now())
+  metadata      Json?
+
+  @@index([eventId, status, occurredAt])
+}
+
+model EventSaleLine {
+  id          String @id @default(cuid())
+  eventSaleId String
+  productId   String
+  quantity    Int
+  unitPrice   Int
+  total       Int
+
+  @@unique([eventSaleId, productId])
+}
+
+model TreasuryProvider {
+  id                String   @id @default(cuid())
+  publicId          String   @unique
+  code              String   @unique
+  name              String
+  adapter           String
+  treasuryAccountId String?
+  active            Boolean  @default(true)
+  config             Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model PaymentLink {
+  id                String   @id @default(cuid())
+  publicId          String   @unique
+  idempotencyKey    String   @unique
+  providerId        String
+  treasuryAccountId String?
+  orderId           String?
+  customerId        String?
+  amount            Int
+  status            String   @default("pending")
+  providerLinkId    String?
+  url               String?
+  expiresAt         DateTime?
+  correlationId     String?
+  createdAt         DateTime @default(now())
+  paidAt            DateTime?
+
+  @@index([orderId])
+  @@index([status, expiresAt])
+}
+
+model TreasuryMatch {
+  id           String   @id @default(cuid())
+  publicId     String   @unique
+  transactionId String
+  matchType    String
+  entityId     String
+  amount       Int
+  createdAt    DateTime @default(now())
+
+  @@unique([transactionId, matchType, entityId])
+}
+
+model TreasurySettlement {
+  id                    String   @id @default(cuid())
+  publicId              String   @unique
+  providerId            String?
+  treasuryAccountId     String
+  externalSettlementId  String?
+  amount                Int
+  fee                   Int      @default(0)
+  settledAt             DateTime
+  metadata              Json?
+  createdAt             DateTime @default(now())
+
+  @@unique([providerId, externalSettlementId])
+}
+
+model PurchaseReceipt {
+  id              String   @id @default(cuid())
+  publicId        String   @unique
+  code            String   @unique
+  purchaseOrderId String
+  supplierId      String
+  warehouseId     String
+  status          String   @default("posted")
+  subtotal        Int
+  landedCost      Int      @default(0)
+  total           Int
+  dueDate         DateTime?
+  accountingStatus String  @default("pending")
+  receivedAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([purchaseOrderId])
+  @@index([supplierId, dueDate])
+}
+
+model PurchaseReceiptLine {
+  id                  String @id @default(cuid())
+  purchaseReceiptId   String
+  purchaseOrderItemId String
+  productId           String
+  inventoryBatchId    String?
+  quantity            Int
+  unitCost            Int
+  total               Int
+
+  @@unique([purchaseReceiptId, purchaseOrderItemId])
+}
+
+model LandedCost {
+  id                String @id @default(cuid())
+  purchaseReceiptId String
+  costType          String
+  amount            Int
+  allocationMethod  String @default("value")
+  note              String?
+
+  @@index([purchaseReceiptId])
+}
+
+model SupplierLedgerEntry {
+  id              String   @id @default(cuid())
+  publicId        String   @unique
+  supplierId      String
+  purchaseOrderId String?
+  receiptId       String?
+  paymentId       String?
+  entryType       String
+  debit           Int      @default(0)
+  credit          Int      @default(0)
+  balance         Int
+  dueDate         DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([supplierId, createdAt])
+}
+
+model PurchasePayment {
+  id                    String   @id @default(cuid())
+  publicId              String   @unique
+  purchaseOrderId       String?
+  supplierId            String
+  treasuryTransactionId String?  @unique
+  amount                Int
+  paidAt                DateTime @default(now())
+  note                  String?
+}
+
+model B2BDispatch {
+  id                   String   @id @default(cuid())
+  publicId             String   @unique
+  code                 String   @unique
+  accountId            String
+  sourceWarehouseId    String
+  destinationWarehouseId String?
+  status               String   @default("posted")
+  idempotencyKey       String   @unique
+  dispatchedAt         DateTime @default(now())
+  correlationId        String?
+  createdAt            DateTime @default(now())
+
+  @@index([accountId, status])
+}
+
+model B2BDispatchLine {
+  id           String @id @default(cuid())
+  dispatchId   String
+  productId    String
+  quantity     Int
+  unitPrice    Int
+  transferGroupId String @unique
+
+  @@unique([dispatchId, productId])
+}
+
+model B2BReturn {
+  id             String   @id @default(cuid())
+  publicId       String   @unique
+  code           String   @unique
+  accountId      String
+  dispatchId     String?
+  idempotencyKey String   @unique
+  returnedAt     DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@index([accountId, returnedAt])
+}
+
+model B2BReturnLine {
+  id             String @id @default(cuid())
+  returnId       String
+  dispatchLineId String?
+  productId      String
+  quantity       Int
+  transferGroupId String @unique
+}
+
+model B2BSalesReport {
+  id                String   @id @default(cuid())
+  publicId          String   @unique
+  code              String   @unique
+  accountId         String
+  externalReference String?
+  status            String   @default("posted")
+  subtotal          Int
+  commission        Int      @default(0)
+  receivable        Int
+  idempotencyKey    String   @unique
+  reportedAt        DateTime @default(now())
+  createdAt         DateTime @default(now())
+
+  @@unique([accountId, externalReference])
+}
+
+model B2BSalesReportLine {
+  id            String @id @default(cuid())
+  salesReportId String
+  productId     String
+  quantity      Int
+  unitPrice     Int
+  total         Int
+
+  @@unique([salesReportId, productId])
+}
+
+model B2BLedgerEntry {
+  id           String   @id @default(cuid())
+  publicId     String   @unique
+  accountId    String
+  reportId     String?
+  settlementId String?
+  entryType    String
+  debit        Int      @default(0)
+  credit       Int      @default(0)
+  balance      Int
+  dueDate      DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([accountId, createdAt])
+}
+
+model B2BSettlement {
+  id                    String   @id @default(cuid())
+  publicId              String   @unique
+  accountId             String
+  treasuryTransactionId String?  @unique
+  amount                Int
+  settledAt             DateTime @default(now())
+  note                  String?
+}
+
+model ShipmentTrackingEvent {
+  id              String   @id @default(cuid())
+  shipmentId      String
+  externalEventId String?
+  status          String
+  location        String?
+  message         String?
+  occurredAt      DateTime
+  payload         Json?
+  createdAt       DateTime @default(now())
+
+  @@unique([shipmentId, externalEventId])
+  @@index([shipmentId, occurredAt])
+}
+
+model ShipmentCost {
+  id              String   @id @default(cuid())
+  publicId        String   @unique
+  shipmentId      String
+  costType        String
+  amount          Int
+  externalCostId  String?
+  invoiceReference String?
+  incurredAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([shipmentId, incurredAt])
+}
+
+model LogisticsSettlement {
+  id                    String   @id @default(cuid())
+  publicId              String   @unique
+  shipmentId            String
+  treasuryTransactionId String?  @unique
+  amount                Int
+  settledAt             DateTime @default(now())
+}
+
+model TaxProductMapping {
+  id           String   @id @default(cuid())
+  profileId    String
+  productId    String
+  taxProductId String
+  title        String?
+  unitCode     String?
+  vatRateBps   Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([profileId, productId])
+  @@index([taxProductId])
+}
+
+model TaxInvoiceLine {
+  id            String @id @default(cuid())
+  taxInvoiceId  String
+  productId     String?
+  taxProductId  String?
+  description   String
+  quantity      Int
+  unitPrice     Int
+  discount      Int    @default(0)
+  vat           Int    @default(0)
+  total         Int
+
+  @@index([taxInvoiceId])
+}
+
+model TaxSubmission {
+  id            String   @id @default(cuid())
+  publicId      String   @unique
+  taxInvoiceId  String
+  attemptNumber Int
+  status        String
+  referenceNumber String?
+  requestHash   String?
+  response      Json?
+  createdAt     DateTime @default(now())
+
+  @@unique([taxInvoiceId, attemptNumber])
+}
+
+model TaxEvent {
+  id           String   @id @default(cuid())
+  taxInvoiceId String
+  eventType    String
+  status       String?
+  payloadHash  String?
+  payload      Json?
+  createdAt    DateTime @default(now())
+
+  @@index([taxInvoiceId, createdAt])
+}
+
+model AnalyticsSource {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  channel   String?
+  active    Boolean  @default(true)
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+model AnalyticsCampaign {
+  id          String   @id @default(cuid())
+  campaignKey String   @unique
+  name        String
+  sourceId    String?
+  channel     String?
+  status      String   @default("active")
+  startsAt    DateTime?
+  endsAt      DateTime?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+}
+
+model OrderAttribution {
+  id                String   @id @default(cuid())
+  orderId           String   @unique
+  sourceId          String?
+  campaignId        String?
+  channel           String?
+  salespersonUserId String?
+  province          String?
+  city              String?
+  attributedAt      DateTime @default(now())
+}
+
+model PriceHistory {
+  id            String   @id @default(cuid())
+  priceKey      String   @unique
+  productId     String
+  channel       String
+  price         Int
+  cost          Int?
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  createdAt     DateTime @default(now())
+
+  @@unique([productId, channel, effectiveFrom])
+  @@index([productId, channel, effectiveTo])
+}
+
+model AnalyticsEvent {
+  id            String   @id @default(cuid())
+  eventKey      String   @unique
+  eventType     String
+  orderId       String?
+  customerId    String?
+  productId     String?
+  campaignId    String?
+  salesChannel  String?
+  sourceCode    String?
+  province      String?
+  city          String?
+  amount        Int?
+  quantity      Int?
+  correlationId String?
+  payload       Json?
+  occurredAt    DateTime
+  createdAt     DateTime @default(now())
+
+  @@index([eventType, occurredAt])
+  @@index([orderId, eventType, occurredAt])
+}
+
+model AnalyticsAlert {
+  id         String   @id @default(cuid())
+  alertKey   String   @unique
+  fingerprint String  @unique
+  ruleCode   String
+  severity   String
+  status     String   @default("open")
+  entityType String?
+  entityId   String?
+  title      String
+  message    String
+  firstSeenAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  resolvedAt DateTime?
+
+  @@index([status, severity])
+}
+
+model ConfigSnapshot {
+  id        String   @id @default(cuid())
+  checksum  String   @unique
+  payload   Json
+  createdBy String?
+  createdAt DateTime @default(now())
+}
+
+model BackupRecord {
+  id          String   @id @default(cuid())
+  filename    String   @unique
+  checksum    String
+  sizeBytes   Int
+  status      String   @default("created")
+  verifiedAt  DateTime?
+  createdBy   String?
+  createdAt   DateTime @default(now())
+}
+
+model ChatSession {
+  id          String   @id @default(cuid())
+  publicId    String   @unique
+  userId      String?
+  customerName String?
+  phone       String?
+  status      String   @default("open")
+  lastReadAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, updatedAt])
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  sessionId   String
+  sender      String
+  text        String   @db.Text
+  externalId  String?  @unique
+  deliveredAt DateTime?
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([sessionId, createdAt])
 }
 
 model Setting {
