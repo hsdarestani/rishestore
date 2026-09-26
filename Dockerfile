@@ -1,10 +1,11 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 RUN apk add --no-cache openssl
+ENV DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build
 COPY package.json ./
 RUN npm install
 COPY . .
-RUN npx prisma generate && npm run build
+RUN npm run build
 
 FROM node:22-alpine AS runtime
 WORKDIR /app

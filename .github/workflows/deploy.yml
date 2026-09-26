@@ -68,6 +68,25 @@ jobs:
           fi
 
           docker compose up -d --build --remove-orphans
+
+          echo "Waiting for application health..."
+          HEALTHY=0
+          for i in $(seq 1 30); do
+            if docker compose exec -T app wget -qO- http://127.0.0.1:3000/api/health 2>/dev/null | grep -q '"ok":true'; then
+              HEALTHY=1
+              break
+            fi
+            sleep 2
+          done
+
+          if [ "$HEALTHY" -ne 1 ]; then
+            echo "Application health check failed"
+            docker compose ps
+            docker compose logs --tail=150 app db caddy
+            exit 1
+          fi
+
           docker image prune -f
           docker compose ps
+          echo "Rishe Store health check passed."
           REMOTE
