@@ -3,7 +3,6 @@ import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getStoreConfig } from "@/lib/settings";
 import AdminPanel from "@/components/AdminPanel";
-import LegacyImportButton from "@/components/LegacyImportButton";
 
 export const dynamic = "force-dynamic";
 
@@ -11,16 +10,101 @@ export default async function AdminPage() {
   const admin = await requireAdmin();
   if (!admin) redirect("/login");
 
-  const [products, categories, orders, pages, posts, faqs, settings] = await Promise.all([
-    db.product.findMany({ orderBy: [{ kind: "asc" }, { updatedAt: "desc" }] }),
+  const [
+    products,
+    categories,
+    orders,
+    pages,
+    posts,
+    faqs,
+    customers,
+    warehouses,
+    inventoryBatches,
+    inventoryMovements,
+    suppliers,
+    purchaseOrders,
+    boms,
+    productionRuns,
+    accountingAccounts,
+    vouchers,
+    treasuryAccounts,
+    treasuryTransactions,
+    manualSales,
+    b2bAccounts,
+    consignments,
+    carriers,
+    shipments,
+    taxProfiles,
+    taxInvoices,
+    goals,
+    jobs,
+    incidents,
+    auditLogs,
+    settings,
+  ] = await Promise.all([
+    db.product.findMany({ include: { category: true }, orderBy: [{ kind: "asc" }, { updatedAt: "desc" }] }),
     db.category.findMany({ orderBy: { sort: "asc" } }),
-    db.order.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
+    db.order.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
     db.page.findMany({ orderBy: { title: "asc" } }),
     db.post.findMany({ orderBy: { updatedAt: "desc" } }),
     db.faq.findMany({ orderBy: { sort: "asc" } }),
+    db.user.findMany({ where: { role: "CUSTOMER" }, include: { _count: { select: { orders: true } } }, orderBy: { createdAt: "desc" }, take: 150 }),
+    db.warehouse.findMany({ orderBy: { createdAt: "asc" } }),
+    db.inventoryBatch.findMany({ include: { warehouse: true, product: true }, orderBy: { receivedAt: "desc" }, take: 300 }),
+    db.inventoryMovement.findMany({ include: { warehouse: true, product: true }, orderBy: { createdAt: "desc" }, take: 150 }),
+    db.supplier.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
+    db.purchaseOrder.findMany({ include: { supplier: true, items: { include: { product: true } } }, orderBy: { createdAt: "desc" }, take: 150 }),
+    db.bom.findMany({ include: { product: true, items: { include: { materialProduct: true } } }, orderBy: { createdAt: "desc" }, take: 100 }),
+    db.productionRun.findMany({ include: { bom: { include: { product: true } }, warehouse: true }, orderBy: { createdAt: "desc" }, take: 100 }),
+    db.accountingAccount.findMany({ orderBy: { code: "asc" } }),
+    db.voucher.findMany({ include: { lines: { include: { account: true } } }, orderBy: { date: "desc" }, take: 150 }),
+    db.treasuryAccount.findMany({ orderBy: { createdAt: "asc" } }),
+    db.treasuryTransaction.findMany({ include: { account: true }, orderBy: { createdAt: "desc" }, take: 150 }),
+    db.manualSale.findMany({ include: { items: { include: { product: true } } }, orderBy: { createdAt: "desc" }, take: 150 }),
+    db.b2BAccount.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
+    db.consignment.findMany({ include: { b2bAccount: true, items: { include: { product: true } } }, orderBy: { createdAt: "desc" }, take: 150 }),
+    db.carrier.findMany({ orderBy: { createdAt: "asc" } }),
+    db.shipment.findMany({ include: { carrier: true, order: true }, orderBy: { createdAt: "desc" }, take: 150 }),
+    db.taxProfile.findMany({ orderBy: { createdAt: "desc" }, take: 50 }),
+    db.taxInvoice.findMany({ include: { profile: true, order: true }, orderBy: { createdAt: "desc" }, take: 100 }),
+    db.analyticsGoal.findMany({ include: { category: true }, orderBy: { periodEnd: "desc" }, take: 100 }),
+    db.operationJob.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
+    db.systemIncident.findMany({ orderBy: { lastSeenAt: "desc" }, take: 100 }),
+    db.auditLog.findMany({ include: { user: true }, orderBy: { createdAt: "desc" }, take: 150 }),
     getStoreConfig(),
   ]);
 
-  const serializedOrders = orders.map((o) => ({ ...o, createdAt: o.createdAt.toISOString(), updatedAt: o.updatedAt.toISOString() }));
-  return <div className="admin-page container"><LegacyImportButton /><AdminPanel products={products} categories={categories} orders={serializedOrders} pages={pages} posts={posts} faqs={faqs} settings={settings} /></div>;
+  const data = JSON.parse(JSON.stringify({
+    products,
+    categories,
+    orders,
+    pages,
+    posts,
+    faqs,
+    customers,
+    warehouses,
+    inventoryBatches,
+    inventoryMovements,
+    suppliers,
+    purchaseOrders,
+    boms,
+    productionRuns,
+    accountingAccounts,
+    vouchers,
+    treasuryAccounts,
+    treasuryTransactions,
+    manualSales,
+    b2bAccounts,
+    consignments,
+    carriers,
+    shipments,
+    taxProfiles,
+    taxInvoices,
+    goals,
+    jobs,
+    incidents,
+    auditLogs,
+  }));
+
+  return <div className="admin-page"><AdminPanel data={data} settings={settings} /></div>;
 }

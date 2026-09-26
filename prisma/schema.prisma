@@ -42,6 +42,7 @@ model User {
   role         UserRole  @default(CUSTOMER)
   orders       Order[]
   addresses    Address[]
+  auditLogs    AuditLog[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
@@ -60,41 +61,49 @@ model Address {
 }
 
 model Category {
-  id          String    @id @default(cuid())
-  slug        String    @unique
-  name        String
-  description String?
-  image       String?
-  sort        Int       @default(0)
-  products    Product[]
+  id             String          @id @default(cuid())
+  slug           String          @unique
+  name           String
+  description    String?
+  image          String?
+  sort           Int             @default(0)
+  products       Product[]
+  analyticsGoals AnalyticsGoal[]
 }
 
 model Product {
-  id               String      @id @default(cuid())
-  slug             String      @unique
+  id               String              @id @default(cuid())
+  slug             String              @unique
   name             String
-  kind             ProductKind @default(PRODUCT)
+  kind             ProductKind         @default(PRODUCT)
   shortDescription String
-  description      String      @db.Text
-  price            Int         @default(0)
+  description      String              @db.Text
+  price            Int                 @default(0)
   compareAt        Int?
   weightGrams      Int?
-  stock            Int         @default(0)
+  stock            Int                 @default(0)
   origin           String?
   usage            String?
   quality          String?
   guarantee        String?
   image            String?
   gallery          Json?
-  featured         Boolean     @default(false)
-  active           Boolean     @default(true)
+  featured         Boolean             @default(false)
+  active           Boolean             @default(true)
   categoryId       String?
-  category         Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  category         Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   seoTitle         String?
   seoDescription   String?
   orderItems       OrderItem[]
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  inventoryBatches InventoryBatch[]
+  inventoryMoves   InventoryMovement[]
+  purchaseItems    PurchaseOrderItem[]
+  bomOutputs       Bom[]               @relation("BomOutput")
+  bomMaterials     BomItem[]           @relation("BomMaterial")
+  consignmentItems ConsignmentItem[]
+  manualSaleItems  ManualSaleItem[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 }
 
 model Page {
@@ -115,12 +124,12 @@ model Post {
   title            String
   excerpt          String
   content          String   @db.Text
-  image            String?
-  keywords         String?
-  published        Boolean  @default(true)
+  image             String?
+  keywords          String?
+  published         Boolean  @default(true)
   healthDisclaimer Boolean  @default(false)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model Faq {
@@ -161,6 +170,8 @@ model Order {
   transactionId   String?       @unique
   paymentRef      String?
   items           OrderItem[]
+  shipments       Shipment[]
+  taxInvoices     TaxInvoice[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 }
@@ -176,6 +187,393 @@ model OrderItem {
   total       Int
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+}
+
+model Warehouse {
+  id             String              @id @default(cuid())
+  code           String              @unique
+  name           String
+  address        String?
+  active         Boolean             @default(true)
+  batches        InventoryBatch[]
+  movements      InventoryMovement[]
+  productionRuns ProductionRun[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}
+
+model InventoryBatch {
+  id          String    @id @default(cuid())
+  warehouseId String
+  productId   String
+  batchCode   String
+  quantity    Int       @default(0)
+  reserved    Int       @default(0)
+  unitCost    Int       @default(0)
+  receivedAt  DateTime  @default(now())
+  expiresAt   DateTime?
+  notes       String?
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([warehouseId, productId, batchCode])
+  @@index([productId, warehouseId])
+}
+
+model InventoryMovement {
+  id            String    @id @default(cuid())
+  warehouseId   String
+  productId     String
+  type          String
+  quantity      Int
+  unitCost      Int?
+  referenceType String?
+  referenceId   String?
+  note          String?
+  warehouse     Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  createdAt     DateTime  @default(now())
+
+  @@index([productId, warehouseId, createdAt])
+}
+
+model Supplier {
+  id             String          @id @default(cuid())
+  code           String          @unique
+  name           String
+  phone          String?
+  email          String?
+  taxId          String?
+  address        String?
+  notes          String?
+  active         Boolean         @default(true)
+  purchaseOrders PurchaseOrder[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model PurchaseOrder {
+  id         String              @id @default(cuid())
+  code       String              @unique
+  supplierId String
+  status     String              @default("draft")
+  subtotal   Int                 @default(0)
+  landedCost Int                 @default(0)
+  total      Int                 @default(0)
+  notes      String?
+  supplier   Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  items      PurchaseOrderItem[]
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  productId       String
+  quantity        Int
+  receivedQty     Int           @default(0)
+  unitPrice       Int
+  total           Int
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+}
+
+model Bom {
+  id             String          @id @default(cuid())
+  code           String          @unique
+  productId      String
+  version        Int             @default(1)
+  outputQuantity Int             @default(1)
+  active         Boolean         @default(false)
+  notes          String?
+  product        Product         @relation("BomOutput", fields: [productId], references: [id], onDelete: Restrict)
+  items          BomItem[]
+  productionRuns ProductionRun[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([productId, version])
+}
+
+model BomItem {
+  id                String  @id @default(cuid())
+  bomId             String
+  materialProductId String
+  quantity          Int
+  wasteBps          Int     @default(0)
+  bom               Bom     @relation(fields: [bomId], references: [id], onDelete: Cascade)
+  materialProduct   Product @relation("BomMaterial", fields: [materialProductId], references: [id], onDelete: Restrict)
+}
+
+model ProductionRun {
+  id           String    @id @default(cuid())
+  code         String    @unique
+  bomId        String
+  warehouseId  String
+  quantity     Int
+  status       String    @default("planned")
+  materialCost Int       @default(0)
+  laborCost    Int       @default(0)
+  wasteCost    Int       @default(0)
+  totalCost    Int       @default(0)
+  startedAt    DateTime?
+  completedAt  DateTime?
+  notes        String?
+  bom          Bom       @relation(fields: [bomId], references: [id], onDelete: Restrict)
+  warehouse    Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model AccountingAccount {
+  id           String              @id @default(cuid())
+  code         String              @unique
+  name         String
+  level        Int                 @default(1)
+  type         String
+  parentId     String?
+  active       Boolean             @default(true)
+  parent       AccountingAccount?  @relation("AccountTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children     AccountingAccount[] @relation("AccountTree")
+  voucherLines VoucherLine[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model Voucher {
+  id          String        @id @default(cuid())
+  code        String        @unique
+  date        DateTime      @default(now())
+  status      String        @default("draft")
+  description String?
+  sourceType  String?
+  sourceId    String?
+  totalDebit  Int           @default(0)
+  totalCredit Int           @default(0)
+  lines       VoucherLine[]
+  createdAt   DateTime      @default(now())
+  postedAt    DateTime?
+}
+
+model VoucherLine {
+  id          String            @id @default(cuid())
+  voucherId   String
+  accountId   String
+  debit       Int               @default(0)
+  credit      Int               @default(0)
+  description String?
+  voucher     Voucher           @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  account     AccountingAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+}
+
+model TreasuryAccount {
+  id           String                @id @default(cuid())
+  code         String                @unique
+  name         String
+  type         String
+  iban         String?
+  cardNumber   String?
+  accountNo    String?
+  active       Boolean               @default(true)
+  transactions TreasuryTransaction[]
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+}
+
+model TreasuryTransaction {
+  id          String          @id @default(cuid())
+  accountId   String
+  externalId  String?         @unique
+  direction   String
+  amount      Int
+  description String?
+  sourceType  String?
+  sourceId    String?
+  status      String          @default("posted")
+  account     TreasuryAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  createdAt   DateTime        @default(now())
+}
+
+model ManualSale {
+  id           String           @id @default(cuid())
+  code         String           @unique
+  channel      String
+  eventName    String?
+  customerName String?
+  phone        String?
+  seller       String?
+  status       String           @default("completed")
+  paymentType  String?
+  total        Int
+  items        ManualSaleItem[]
+  createdAt    DateTime         @default(now())
+}
+
+model ManualSaleItem {
+  id        String     @id @default(cuid())
+  saleId    String
+  productId String
+  quantity  Int
+  unitPrice Int
+  total     Int
+  sale      ManualSale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Restrict)
+}
+
+model B2BAccount {
+  id               String        @id @default(cuid())
+  code             String        @unique
+  name             String
+  phone            String?
+  email            String?
+  creditLimit      Int           @default(0)
+  balance          Int           @default(0)
+  commissionBps    Int           @default(0)
+  status           String        @default("active")
+  notes            String?
+  consignments     Consignment[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Consignment {
+  id           String            @id @default(cuid())
+  code         String            @unique
+  b2bAccountId String
+  status       String            @default("open")
+  total        Int               @default(0)
+  notes        String?
+  b2bAccount   B2BAccount        @relation(fields: [b2bAccountId], references: [id], onDelete: Restrict)
+  items        ConsignmentItem[]
+  createdAt    DateTime          @default(now())
+  settledAt    DateTime?
+}
+
+model ConsignmentItem {
+  id            String      @id @default(cuid())
+  consignmentId String
+  productId     String
+  quantity      Int
+  soldQty       Int         @default(0)
+  unitPrice     Int
+  consignment   Consignment @relation(fields: [consignmentId], references: [id], onDelete: Cascade)
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Restrict)
+}
+
+model Carrier {
+  id        String     @id @default(cuid())
+  code      String     @unique
+  name      String
+  active    Boolean    @default(true)
+  config    Json?
+  shipments Shipment[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Shipment {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  orderId       String?
+  carrierId     String?
+  status        String   @default("draft")
+  trackingCode  String?
+  recipientName String
+  phone         String
+  address       String
+  cost          Int      @default(0)
+  actualCost    Int?
+  notes         String?
+  order         Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  carrier       Carrier? @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+  createdAt     DateTime @default(now())
+  shippedAt     DateTime?
+  deliveredAt   DateTime?
+}
+
+model TaxProfile {
+  id        String       @id @default(cuid())
+  name      String
+  taxId     String
+  memoryId  String?
+  enabled   Boolean      @default(false)
+  invoices  TaxInvoice[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model TaxInvoice {
+  id            String      @id @default(cuid())
+  profileId     String
+  orderId       String?
+  number        String      @unique
+  status        String      @default("draft")
+  total         Int
+  trackingCode  String?
+  referenceId   String?
+  payloadHash   String?
+  profile       TaxProfile  @relation(fields: [profileId], references: [id], onDelete: Restrict)
+  order         Order?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  createdAt     DateTime    @default(now())
+  submittedAt   DateTime?
+}
+
+model AnalyticsGoal {
+  id           String    @id @default(cuid())
+  name         String
+  metric       String
+  target       Int
+  periodStart  DateTime
+  periodEnd    DateTime
+  salesChannel String?
+  categoryId   String?
+  category     Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model OperationJob {
+  id             String   @id @default(cuid())
+  type           String
+  aggregateId    String?
+  idempotencyKey String   @unique
+  status         String   @default("pending")
+  attempts       Int      @default(0)
+  maxAttempts    Int      @default(5)
+  nextRunAt      DateTime?
+  lastError      String?
+  payload        Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model SystemIncident {
+  id          String   @id @default(cuid())
+  fingerprint String   @unique
+  severity    String   @default("warning")
+  status      String   @default("open")
+  title       String
+  message     String   @db.Text
+  occurrences Int      @default(1)
+  lastSeenAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  resolvedAt  DateTime?
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  userId        String?
+  action        String
+  entityType    String
+  entityId      String?
+  correlationId String
+  metadata      Json?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt     DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
 }
 
 model Setting {
