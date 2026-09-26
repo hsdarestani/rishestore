@@ -31,6 +31,37 @@ const legacyMap: Record<string, { slug: string; category: string }> = {
   "424": { slug: "wheat-flakes", category: "grains-seasonings" },
 };
 
+
+const liveCatalogState: Record<string, { price: number; stock: number; name: string }> = {
+  "113": { price: 1190000, stock: 233, name: "عسل طبیعی زاگرس" },
+  "124": { price: 349000, stock: 228, name: "نخود ۲خان دست‌چین" },
+  "139": { price: 510000, stock: 208, name: "لوبیا چیتی زنجان" },
+  "147": { price: 298000, stock: 0, name: "عدس درشت مجلسی" },
+  "210": { price: 500000, stock: 211, name: "برنج هاشمی درجه ۱" },
+  "228": { price: 309000, stock: 211, name: "عدس ریز دست‌چین" },
+  "249": { price: 363000, stock: 221, name: "ذرت پاپکورن خام" },
+  "251": { price: 273000, stock: 203, name: "چای ممتاز گیلان" },
+  "255": { price: 369000, stock: 202, name: "لوبیا قرمز دست‌چین" },
+  "256": { price: 359000, stock: 207, name: "لپه آذرشهر ممتاز" },
+  "258": { price: 220000, stock: 202, name: "باقالی درجه ۱ ممتاز" },
+  "421": { price: 132000, stock: 203, name: "چای چوبدار گیلان" },
+  "422": { price: 135000, stock: 215, name: "نعنا خشک" },
+  "423": { price: 79000, stock: 219, name: "پرک جو" },
+  "424": { price: 69000, stock: 700, name: "پرک گندم" },
+};
+
+const homepageReviews = [
+  ["مریم حسینی", "برنج هاشمی و عدس ریز رو سفارش دادم. عطر برنج موقع پخت کل ساختمون رو برداشت. عدس هم پوستش جدا نشد و عدس‌پلو فوق‌العاده شد."],
+  ["علی رضاپور", "نخود ۲خان رو برای رستوران سنتی‌مون تهیه کردیم. پختش عالیه و مشتری‌ها متوجه تغییر کیفیت دیزی‌ها شدن. عیار محصول کاملاً مشخصه."],
+  ["سارا احمدی", "ذرت خام واقعا به شرط پخت بود. یک دانه هم ته قابلمه نسوخت یا بسته نموند! بچه‌ها خیلی دوست دارن و خوشحالم که محصول تمیزی دستمون رسید."],
+  ["رضا مهدوی", "لوبیا چیتی زنجان غلظت و لعاب عجیبی به قرمه داد. اصلاً دیرپز نبود و کاملاً مشخصه که تازه است و توی انبار نمونده. خریدش رو توصیه می‌کنم."],
+  ["زهرا سلطانی", "باقالی درجه ۱ رو برای باقالی‌پلو عید خریدم. کاملاً همگون پخت و هیچ‌کدوم سفت نموندن. طعم خامه‌ای و فوق‌العاده‌ای داشت."],
+  ["امید صادقی", "چای شمال ریشه طعم چای اصیل قدیما رو میده. عاری از اسانس‌های تند شیمیاییه و بعد از دم کشیدن طولانی تلخ نمیشه. رنگش یاقوتی و عالیه."],
+  ["نرگس کمالی", "عدس درشت رو دیشب پختم. یکدستی ظاهرش توی دیس عالی بود و پوستش جدا نشد. عیار و ارزش خرید بالایی داره. حتماً باز هم تمدید می‌کنم."],
+  ["حسین مرادی", "لپه آذرشهر ریشه توی قیمه مجلسی ما عالی جواب داد. در کمتر از ۴۰ دقیقه مغزپخت شد و لعاب بسیار خوبی به خورش داد. تشکر از تیم ریشه."],
+  ["فاطمه دهقان", "بسته‌بندی مینیمال و تمیز، ارسال سریع و از همه مهم‌تر کیفیت واقعی حبوبات. عسل هم واقعاً غلیظ و معطر بود. صداقتتون تو کار ارزشمنده."],
+] as const;
+
 function legacyData(): Record<string, any> {
   const file = path.join(process.cwd(), "data", "product-content.json.gz");
   return JSON.parse(gunzipSync(readFileSync(file)).toString("utf8"));
@@ -170,6 +201,22 @@ async function main() {
     await db.setting.create({ data: { key: "legacyProductSnapshotImported", value: new Date().toISOString() } });
   }
 
+  const liveStateMarker = await db.setting.findUnique({ where: { key: "catalogSnapshot20260926" } });
+  if (!liveStateMarker) {
+    for (const [legacyId, state] of Object.entries(liveCatalogState)) {
+      await db.product.updateMany({
+        where: { legacyProductId: Number(legacyId) },
+        data: {
+          name: state.name,
+          price: state.price,
+          stock: state.stock,
+          stockStatus: state.stock > 0 ? "instock" : "outofstock",
+        },
+      });
+    }
+    await db.setting.create({ data: { key: "catalogSnapshot20260926", value: new Date().toISOString() } });
+  }
+
   await db.product.updateMany({ where: { slug: "red-lentils", legacyProductId: null }, data: { active: false } }).catch(() => undefined);
 
   const mainWarehouse = await db.warehouse.upsert({
@@ -206,6 +253,28 @@ async function main() {
   }
 
   for (const page of pages) await db.page.upsert({ where: { slug: page.slug }, create: page, update: {} });
+
+  const exactContentMarker = await db.setting.findUnique({ where: { key: "exactPublicContentV1" } });
+  if (!exactContentMarker) {
+    await db.page.update({
+      where: { slug: "about" },
+      data: {
+        title: "درباره ما",
+        kicker: "داستان ما",
+        excerpt: "همه‌مان آخرش به ریشه‌مان برمی‌گردیم.",
+        content: "«هر کسی کو دور ماند از اصل خویش، باز جوید روزگار وصل خویش»\n\nکار ما در «ریشه»، الهام گرفته از همین یک بیتِ ساده اما عمیق است. با گذر زمان و غرق شدن در شلوغی‌های زندگی شهری و هیاهوی تکنولوژی، گاهی فراموش می‌کنیم که چه اصالت، فرهنگ و طعم‌های بی‌نظیری در اقلیم‌های بکر سرزمینمان نهفته است.\n\nما باور داریم که غذا تنها یک نیاز روزمره نیست؛ بلکه رشته‌ای نامرئی است که می‌تواند با سینه به سینه نقل شدن داستان‌ها، حال و هوای اصیل ایرانی را دوباره در خانه‌های ما زنده کند.\n\nبه همین بهانه، ما سفری را آغاز کردیم. سفری برای یافتن بهترین دست‌رنج‌های کشاورزانِ این آب و خاک. ما محصولات خوراکی را مستقیماً از قلبِ اقلیم‌های مختلف ایران تامین می‌کنیم؛ جایی که آب، خاک و آفتاب، بهترین نسخه از یک دانه را پرورش داده‌اند.\n\nدر «ریشه»، ما ظاهر زیبای محصولات را فدای کیفیت باطنی آن‌ها نمی‌کنیم. هر محصول پیش از رسیدن به دست شما، باید از آزمونِ سخت‌گیرانه پخت ما سربلند بیرون بیاید.\n\nهدف ما در ریشه روشن است: تامین باکیفیت‌ترین محصول ایرانی برای سفره‌های شما، حمایت مستقیم از کشاورزان و تولیدکنندگان محلی، و در نهایت... بازگشتِ دوباره به اصل و ریشه‌ی خودمان.",
+      },
+    });
+
+    for (const [name, reviewText] of homepageReviews) {
+      const exists = await db.review.findFirst({ where: { name, text: reviewText } });
+      if (!exists) await db.review.create({ data: { name, text: reviewText, rating: 5, approved: true } });
+    }
+
+    await db.setting.upsert({ where: { key: "storePhone" }, create: { key: "storePhone", value: "09910938033" }, update: { value: "09910938033" } });
+    await db.setting.upsert({ where: { key: "baleUrl" }, create: { key: "baleUrl", value: "https://ble.ir/rishe_store" }, update: { value: "https://ble.ir/rishe_store" } });
+    await db.setting.create({ data: { key: "exactPublicContentV1", value: new Date().toISOString() } });
+  }
   for (const post of posts) await db.post.upsert({ where: { slug: post.slug }, create: post, update: {} });
   for (const [question, answer, sort] of faqs) {
     await db.faq.upsert({ where: { question: String(question) }, create: { question: String(question), answer: String(answer), sort: Number(sort) }, update: {} });

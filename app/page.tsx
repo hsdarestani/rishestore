@@ -4,76 +4,145 @@ import ProductCard from "@/components/ProductCard";
 
 export const dynamic = "force-dynamic";
 
+function text(value: unknown) {
+  return String(value || "").trim();
+}
+
 export default async function HomePage() {
-  const [categories, featured, packs, posts, reviews] = await Promise.all([
+  const [categories, products, packs, posts, reviews] = await Promise.all([
     db.category.findMany({ orderBy: { sort: "asc" }, take: 5 }),
-    db.product.findMany({ where: { active: true, kind: "PRODUCT" }, include: { category: true }, orderBy: [{ featured: "desc" }, { updatedAt: "desc" }], take: 6 }),
+    db.product.findMany({
+      where: { active: true, kind: "PRODUCT" },
+      include: { category: true },
+      orderBy: [{ legacyProductId: "asc" }, { updatedAt: "desc" }],
+    }),
     db.product.findMany({ where: { active: true, kind: "PACK" }, include: { category: true }, take: 3 }),
-    db.post.findMany({ where: { published: true }, orderBy: { updatedAt: "desc" }, take: 3 }),
-    db.review.findMany({ where: { approved: true }, orderBy: { createdAt: "desc" }, take: 3 }),
+    db.post.findMany({ where: { published: true }, orderBy: { updatedAt: "desc" }, take: 6 }),
+    db.review.findMany({ where: { approved: true }, orderBy: { createdAt: "asc" }, take: 9 }),
   ]);
+
+  const showcase = products.filter((p) => [113,124,139,210,249,251,258,255,256,228,147].includes(p.legacyProductId || 0));
+  const leadProducts = showcase.length ? showcase : products.slice(0, 11);
 
   return (
     <>
-      <section className="hero">
+      <section className="hero home-legacy-hero">
         <div className="container hero-grid">
           <div className="hero-copy">
-            <span className="eyebrow">روایت محصول، قبل از خرید</span>
-            <h1>روایت اصالت،<br/><em>مستقیم از مزرعه پدری</em></h1>
-            <p>ما در «ریشه» کیفیت را فدای ظاهر نمی‌کنیم. هر محصول، پیش از رسیدن به دست شما، در آشپزخانه ما پخته و سنجیده می‌شود تا طعم واقعی و بی‌آلایش محصول به سفره برسد.</p>
-            <div className="hero-actions"><Link className="btn btn-primary" href="/shop">خرید محصولات</Link><Link className="btn btn-ghost" href="/why-rishe">چرا ریشه؟</Link></div>
-            <div className="trust-strip"><span>محصولات دست‌چین</span><span>تست پخت و بررسی کیفیت</span><span>کیفیت، به شرط پخت</span></div>
+            <span className="eyebrow">کیفیت، به شرط پخت</span>
+            <h1>روایتِ اصالت،<br/><em>مستقیم از مزرعه پدری</em></h1>
+            <p>ما در «ریشه»، کیفیت را فدای ظاهر نمی‌کنیم. هر محصول پیش از رسیدن به دست شما، در آشپزخانه ما پخته و سنجیده می‌شود تا طعم واقعی و بی‌آلایش محصولات را به سفره بیاورید.</p>
+            <div className="hero-actions">
+              <Link className="btn btn-primary" href="/shop">خرید پک‌ها و محصولات پیشنهادی</Link>
+              <Link className="btn btn-ghost" href="/about">روایت دست‌چین‌ها را بخوانید</Link>
+            </div>
+            <div className="trust-strip">
+              <span>تضمین کیفیت</span>
+              <span>تست پخت قبل از عرضه</span>
+              <span>ارسال سریع کرج و تهران</span>
+            </div>
           </div>
 
           <div className="hero-art hero-photo">
-            <img className="hero-main-photo" src="/brand/hero.png" alt="محصولات محلی و دست‌چین ریشه" />
+            <img className="hero-main-photo" src="/brand/hero.png" alt="محصولات دست‌چین ریشه" />
             <div className="hero-product-stack" aria-hidden>
-              <img src="/brand/products/chickpeas.png" alt="" />
-              <img src="/brand/products/tea.png" alt="" />
-              <img src="/brand/products/honey.jpg" alt="" />
+              <img src="/brand/products/legacy-124.png" alt="" />
+              <img src="/brand/products/legacy-251.png" alt="" />
+              <img src="/brand/products/legacy-113.jpg" alt="" />
             </div>
-            <div className="hero-note">همان تصاویر و هویت بصری فعلی ریشه، روی زیرساخت مستقل جدید.</div>
+            <div className="hero-note">به شرط پخت؛ اگر راضی نبودی، پس می‌گیریم</div>
           </div>
         </div>
       </section>
 
       <section className="section container">
-        <div className="section-heading row-heading"><div><span>از اینجا شروع کنید</span><h2>دسته‌بندی محصولات</h2></div><Link href="/shop">مشاهده همه محصولات ←</Link></div>
+        <div className="section-heading row-heading">
+          <div>
+            <span>دسترسی مستقیم و شفاف</span>
+            <h2>ویترین حبوبات و دست‌چین‌های ریشه</h2>
+            <p>قیمت روز، وزن بسته‌بندی و شناسنامه هر محصول را بررسی کنید و با کلیک روی هر کدام، داستان زمین و عیار پخت آن را بخوانید.</p>
+          </div>
+          <Link href="/shop">همه محصولات ←</Link>
+        </div>
         <div className="category-grid">
-          {categories.map((cat, index) => <Link key={cat.id} href={"/category/" + cat.slug} className={"category-card category-" + (index + 1)}><span className="category-index">۰{index + 1}</span><div><h3>{cat.name}</h3><p>{cat.description}</p></div><b>مشاهده محصولات</b></Link>)}
+          {categories.map((cat, index) => <Link key={cat.id} href={"/category/" + cat.slug} className={"category-card category-" + (index + 1)}>
+            <span className="category-index">۰{index + 1}</span>
+            <div><h3>{cat.name}</h3><p>{cat.description}</p></div>
+            <b>مشاهده محصولات</b>
+          </Link>)}
         </div>
       </section>
 
       <section className="section section-tint">
         <div className="container">
-          <div className="section-heading row-heading"><div><span>انتخاب‌های فروشگاه</span><h2>محصولات ریشه</h2><p>اطلاعات هر محصول، از تصویر و وزن تا قیمت و موجودی، مستقیم از کاتالوگ فروشگاه مدیریت می‌شود.</p></div><Link href="/shop">رفتن به فروشگاه ←</Link></div>
-          {featured.length ? <div className="product-grid">{featured.map((p) => <ProductCard key={p.id} product={p} />)}</div> : <div className="empty-state">محصولات در حال انتقال به فروشگاه جدید هستند.</div>}
+          <div className="section-heading row-heading">
+            <div>
+              <span>قیمت و موجودی واقعی</span>
+              <h2>محصولات ریشه</h2>
+              <p>قیمت، موجودی و اطلاعات هر محصول از همان کاتالوگ عملیاتی فروشگاه خوانده می‌شود.</p>
+            </div>
+            <Link href="/shop">رفتن به فروشگاه ←</Link>
+          </div>
+          <div className="product-grid">{leadProducts.map((p) => <ProductCard key={p.id} product={p} />)}</div>
         </div>
       </section>
 
-      <section className="section container">
-        <div className="why-grid">
-          <div className="section-heading"><span>چرا ریشه؟</span><h2>اعتماد باید در اطلاعات محصول دیده شود.</h2><p>هویت فعلی ریشه حفظ شده و تجربه خرید روی اطلاعات واقعی محصول، کیفیت و نتیجه پخت بنا می‌شود.</p><Link className="btn btn-secondary" href="/why-rishe">داستان و روش انتخاب ریشه</Link></div>
-          <div className="trust-cards">
-            <article><i>۱</i><h3>تست کیفیت</h3><p>نتیجه بررسی و پخت هر محصول کنار همان کالا نگهداری می‌شود.</p></article>
-            <article><i>۲</i><h3>اطلاعات شفاف</h3><p>وزن، قیمت، موجودی، کاربرد و مبدأ در یک صفحه و بدون ابهام.</p></article>
-            <article><i>۳</i><h3>به شرط پخت</h3><p>وعده اصلی ریشه به‌صورت واضح در تجربه خرید حفظ شده است.</p></article>
+      <section className="section container home-philosophy">
+        <div className="home-poem">
+          <span className="eyebrow">فلسفه ریشه</span>
+          <blockquote>«هر کسی کو دور ماند از اصل خویش<br/>باز جوید روزگار وصل خویش.»</blockquote>
+          <p>در غوغای زندگی شهری، عطر گندمزار و طعم کوهستان فراموش شده است. «ریشه» پلی است به اقلیم‌های پاک ایران. ما به دنبال بازگرداندن پیوند شما با خاک هستیم؛ محصولاتی که از فیلتر سخت‌گیرانه تست‌های کیفی و پختِ ما عبور کرده‌اند تا دوباره به اصل خودمان وصل شویم.</p>
+        </div>
+        <div className="trust-cards">
+          <article><i>۱</i><h3>تست پخت</h3><p>هر محصول قبل از عرضه در شرایط واقعی آشپزخانه سنجیده می‌شود.</p></article>
+          <article><i>۲</i><h3>قیمت شفاف</h3><p>قیمت، وزن و موجودی همان‌جا کنار محصول دیده می‌شود.</p></article>
+          <article><i>۳</i><h3>انتخاب اصیل</h3><p>تأمین از اقلیم‌های مشخص و انتخاب بر اساس کیفیت واقعی، نه صرفاً ظاهر.</p></article>
+        </div>
+      </section>
+
+      <section className="section home-stories">
+        <div className="container">
+          <div className="section-heading">
+            <span>دست‌چین‌های امسال</span>
+            <h2>روایت محصولات ما</h2>
+            <p>هر محصول فقط یک کالا نیست؛ داستان خاک، تامین، تست کیفیت و عیار پخت خودش را دارد.</p>
+          </div>
+          <div className="home-story-grid">
+            {leadProducts.map((product, index) => {
+              const legacy = product.legacyContent as any;
+              const hero = legacy?.hero || {};
+              return <Link key={product.id} href={"/product/" + product.slug} className="home-story-card">
+                <span className="home-story-index">۱۱ / {String(index + 1).padStart(2, "0")}</span>
+                <div className="home-story-image">{product.image ? <img src={product.image} alt={product.name} /> : <div className="product-fallback">ر</div>}</div>
+                <div className="home-story-copy">
+                  <h3>{text(hero.display_title) || product.name}</h3>
+                  <strong>{product.price > 0 ? product.price.toLocaleString("fa-IR") + " تومان" : "قیمت در حال بروزرسانی"}</strong>
+                  {text(hero.myth) && <p className="home-story-myth">{hero.myth}</p>}
+                  {text(hero.story) && <p><b>روایت تامین:</b> {hero.story}</p>}
+                  <span className="home-story-buy">مشاهده و خرید ←</span>
+                </div>
+              </Link>;
+            })}
           </div>
         </div>
       </section>
 
       {packs.length > 0 && <section className="section section-dark"><div className="container"><div className="section-heading light"><span>پک‌ها</span><h2>چند انتخاب کنار هم، یک خرید ساده‌تر.</h2></div><div className="product-grid">{packs.map((p) => <ProductCard key={p.id} product={p} />)}</div><Link className="btn btn-light" href="/packs">همه پک‌ها</Link></div></section>}
 
-      <section className="section container story-band"><div><span className="eyebrow">داستان کوتاه ریشه</span><h2>محصول اول، روایت بعد.</h2></div><p>ریشه تجربه خرید را از یک ویترین ساده به شناخت محصول، شیوه تأمین، کیفیت و نتیجه پخت تبدیل می‌کند.</p><Link href="/about">بیشتر درباره ریشه ←</Link></section>
-
-      {reviews.length > 0 && <section className="section container"><div className="section-heading"><span>تجربه مشتریان</span><h2>نظرهای ثبت‌شده</h2></div><div className="review-grid">{reviews.map((r) => <blockquote key={r.id}><div>{"★".repeat(Math.max(1, Math.min(5, r.rating)))}</div><p>{r.text}</p><cite>{r.name}</cite></blockquote>)}</div></section>}
-
       <section className="section container">
-        <div className="section-heading row-heading"><div><span>مجله ریشه</span><h2>راهنماهایی که به خرید کمک می‌کنند.</h2></div><Link href="/magazine">همه مطالب ←</Link></div>
-        <div className="article-grid">{posts.map((post) => <Link key={post.id} href={"/magazine/" + post.slug} className="article-card"><span>راهنمای ریشه</span><h3>{post.title}</h3><p>{post.excerpt}</p><b>مطالعه مطلب ←</b></Link>)}</div>
+        <div className="section-heading"><span>اعتماد شما عیار ماست</span><h2>تجربه خریداران ریشه</h2><p>روایت کسانی که با تکیه بر «شرط پخت ریشه» اصالت را به سفره‌هایشان برگرداندند.</p></div>
+        {reviews.length ? <div className="review-grid home-reviews">{reviews.map((r) => <blockquote key={r.id}><div>{"★".repeat(Math.max(1, Math.min(5, r.rating)))}</div><p>«{r.text}»</p><cite>{r.name}</cite></blockquote>)}</div> : null}
       </section>
 
-      <section className="section container final-cta"><div><span className="eyebrow">آماده انتخابی؟</span><h2>از دسته‌بندی شروع کن.</h2><p>محصول را پیدا کن، اطلاعاتش را بخوان و بعد تصمیم بگیر.</p></div><Link className="btn btn-primary" href="/shop">ورود به فروشگاه</Link></section>
+      <section className="section container">
+        <div className="section-heading row-heading"><div><span>مجله ریشه</span><h2>همه روایت‌ها و راهنماهای بلاگ</h2></div><Link href="/magazine">همه مطالب ←</Link></div>
+        <div className="article-grid">{posts.map((post) => <Link key={post.id} href={"/magazine/" + post.slug} className="article-card"><span>مجله ریشه</span><h3>{post.title}</h3><p>{post.excerpt}</p><b>خواندن مطلب ←</b></Link>)}</div>
+      </section>
+
+      <section className="section container final-cta">
+        <div><span className="eyebrow">اول از محصولات پیشنهادی شروع کن</span><h2>محصولاتی که عیار پختشان در ریشه تست شده است.</h2><p>برای خرید اول، محصولاتی را انتخاب کن که هم پرمصرف‌اند، هم کیفیت پختشان در ریشه تست شده است.</p></div>
+        <Link className="btn btn-primary" href="/shop">رفتن به ویترین محصولات</Link>
+      </section>
     </>
   );
 }

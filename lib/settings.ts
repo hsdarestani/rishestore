@@ -44,8 +44,9 @@ export async function getStoreConfig() {
   const freeShippingThreshold = Number(map.freeShippingThreshold || 0);
   return {
     storeName: map.storeName || "ریشه",
-    storePhone: map.storePhone || "",
+    storePhone: map.storePhone || "09910938033",
     instagramUrl: map.instagramUrl || "",
+    baleUrl: map.baleUrl || "https://ble.ir/rishe_store",
     shippingFlatRate: Number.isFinite(shippingFlatRate) ? shippingFlatRate : 0,
     freeShippingThreshold: Number.isFinite(freeShippingThreshold) ? freeShippingThreshold : 0,
     paymentProvider: "zibal",

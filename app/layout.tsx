@@ -10,13 +10,13 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: "ریشه | فروشگاه محصولات ایرانی", template: "%s | ریشه" },
-  description: "فروشگاه ریشه؛ محصولات ایرانی با اطلاعات روشن درباره وزن، قیمت، کاربرد، کیفیت و مسیر خرید ساده.",
+  title: { default: "ریشه | روایت اصالت، مستقیم از مزرعه پدری", template: "%s | ریشه" },
+  description: "فروشگاه ریشه؛ محصولات دست‌چین ایرانی با تست پخت، قیمت و موجودی شفاف و روایت تامین هر محصول.",
   openGraph: { type: "website", locale: "fa_IR", siteName: "ریشه", url: siteUrl },
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  let config = { storeName: "ریشه", storePhone: "", instagramUrl: "" };
+  let config = { storeName: "ریشه", storePhone: "09910938033", instagramUrl: "", baleUrl: "https://ble.ir/rishe_store" };
   try { config = await getStoreConfig(); } catch {}
 
   return (
@@ -24,7 +24,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body>
         <CartProvider>
           <MotionController />
-          <SiteChrome storeName={config.storeName} phone={config.storePhone} instagram={config.instagramUrl}>
+          <SiteChrome storeName={config.storeName} phone={config.storePhone} instagram={config.instagramUrl} bale={config.baleUrl}>
             {children}
           </SiteChrome>
         </CartProvider>
