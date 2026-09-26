@@ -18,11 +18,10 @@ export default function Header({ storeName = "ریشه" }: { storeName?: string 
 
   return (
     <header className="site-header">
-      <div className="top-note">انتخاب روشن‌تر، خرید ساده‌تر، اطلاعات شفاف‌تر</div>
+      <div className="top-note">کیفیت، به شرط پخت</div>
       <div className="header-main container">
-        <Link href="/" className="brand" aria-label="صفحه اصلی ریشه">
-          <span className="brand-mark" aria-hidden>ر</span>
-          <span><strong>{storeName}</strong><small>فروشگاه محصولات ایرانی</small></span>
+        <Link href="/" className="brand brand-image" aria-label="صفحه اصلی فروشگاه ریشه">
+          <img className="brand-logo" src="/brand/logo.png" alt={storeName} />
         </Link>
 
         <nav className={open ? "main-nav is-open" : "main-nav"} aria-label="منوی اصلی">

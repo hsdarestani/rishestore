@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { assertSameOrigin } from "@/lib/auth";
-import { createNextPayTransaction } from "@/lib/nextpay";
+import { createZibalTransaction, zibalStartUrl } from "@/lib/zibal";
 
 export async function POST(request: Request) {
   try {
@@ -15,14 +15,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "این سفارش قبلاً پرداخت شده است." }, { status: 409 });
     }
 
-    if (order.transactionId && order.paymentStatus === "PENDING") {
-      return NextResponse.json({ url: "https://nextpay.org/nx/gateway/payment/" + encodeURIComponent(order.transactionId) });
+    if (order.transactionId && order.paymentStatus === "PENDING" && order.paymentProvider === "zibal") {
+      return NextResponse.json({ url: zibalStartUrl(order.transactionId) });
     }
 
-    const payment = await createNextPayTransaction(order.code, order.total);
+    const payment = await createZibalTransaction({
+      orderCode: order.code,
+      amountToman: order.total,
+      mobile: order.phone,
+    });
+
     await db.order.update({
       where: { id: order.id },
-      data: { paymentProvider: "nextpay", paymentStatus: "PENDING", transactionId: payment.transId },
+      data: {
+        paymentProvider: "zibal",
+        paymentStatus: "PENDING",
+        transactionId: payment.trackId,
+        paymentRef: null,
+      },
     });
 
     return NextResponse.json({ url: payment.url });
@@ -30,8 +40,8 @@ export async function POST(request: Request) {
     console.error(error);
     const message =
       error instanceof Error && error.message === "PAYMENT_NOT_CONFIGURED"
-        ? "درگاه پرداخت تنظیم نشده است."
-        : "اتصال به درگاه پرداخت انجام نشد.";
+        ? "درگاه زیبال روی سرور تنظیم نشده است."
+        : "اتصال به درگاه زیبال انجام نشد.";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

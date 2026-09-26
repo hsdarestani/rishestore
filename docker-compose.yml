@@ -24,8 +24,10 @@ services:
       DATABASE_URL: postgresql://rishe:${POSTGRES_PASSWORD}@db:5432/rishe?schema=public
       APP_SECRET: ${APP_SECRET}
       NEXT_PUBLIC_SITE_URL: https://new.rishe.store
+      ZIBAL_MERCHANT: ${ZIBAL_MERCHANT}
     volumes:
       - uploads:/app/public/uploads
+      - brand_assets:/app/public/brand
 
   caddy:
     image: caddy:2-alpine
@@ -44,5 +46,6 @@ services:
 volumes:
   pgdata:
   uploads:
+  brand_assets:
   caddy_data:
   caddy_config:

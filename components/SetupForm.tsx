@@ -19,7 +19,7 @@ export default function SetupForm() {
 
   return (
     <form className="setup-form panel" onSubmit={submit}>
-      <div className="section-heading"><span>راه‌اندازی یک‌باره</span><h1>فروشگاه ریشه را تحویل بگیر</h1><p>این صفحه بعد از ساخت اولین مدیر غیرفعال می‌شود.</p></div>
+      <div className="section-heading"><span>راه‌اندازی یک‌باره</span><h1>فروشگاه ریشه را تحویل بگیر</h1><p>این صفحه بعد از ساخت اولین مدیر غیرفعال می‌شود. پرداخت از متغیر امن ZIBAL_MERCHANT روی سرور خوانده می‌شود.</p></div>
       <div className="form-grid">
         <label>نام مدیر<input name="name" required /></label>
         <label>شماره موبایل مدیر<input name="phone" required inputMode="tel" placeholder="09xxxxxxxxx" /></label>
@@ -28,7 +28,6 @@ export default function SetupForm() {
         <label>ارسال رایگان از مبلغ، تومان<input name="freeShippingThreshold" type="number" min="0" defaultValue="0" /></label>
         <label>شماره تماس فروشگاه<input name="storePhone" inputMode="tel" /></label>
         <label>آدرس اینستاگرام<input name="instagramUrl" placeholder="https://instagram.com/..." /></label>
-        <label className="span-2">کلید API نکست‌پی<input name="nextpayApiKey" placeholder="می‌توانی بعداً هم وارد کنی" /></label>
       </div>
       {error && <p className="alert error">{error}</p>}
       <button className="btn btn-primary" disabled={busy}>{busy ? "در حال راه‌اندازی…" : "ایجاد مدیر و فعال‌سازی فروشگاه"}</button>

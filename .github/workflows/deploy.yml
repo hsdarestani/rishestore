@@ -17,9 +17,11 @@ jobs:
         env:
           HOST: ${{ secrets.HOST }}
           PASS: ${{ secrets.PASS }}
+          ZIBAL_MERCHANT: ${{ secrets.ZIBAL_MERCHANT }}
         run: |
           test -n "$HOST" || (echo "HOST secret is missing" && exit 1)
           test -n "$PASS" || (echo "PASS secret is missing" && exit 1)
+          test -n "$ZIBAL_MERCHANT" || (echo "ZIBAL_MERCHANT secret is missing" && exit 1)
 
       - name: Install SSH helper
         run: sudo apt-get update && sudo apt-get install -y sshpass
@@ -29,10 +31,12 @@ jobs:
           HOST: ${{ secrets.HOST }}
           PASS: ${{ secrets.PASS }}
           SSH_USER: ${{ secrets.SSH_USER }}
+          ZIBAL_MERCHANT: ${{ secrets.ZIBAL_MERCHANT }}
         run: |
           USER_NAME="${SSH_USER:-root}"
           export SSHPASS="$PASS"
-          sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 "$USER_NAME@$HOST" 'bash -s' <<'REMOTE'
+          ZIBAL_B64="$(printf '%s' "$ZIBAL_MERCHANT" | base64 -w0)"
+          sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 "$USER_NAME@$HOST" "export ZIBAL_MERCHANT_B64='$ZIBAL_B64'; bash -s" <<'REMOTE'
           set -euo pipefail
 
           if ! command -v git >/dev/null 2>&1; then
@@ -66,6 +70,12 @@ jobs:
             printf 'POSTGRES_PASSWORD=%s\nAPP_SECRET=%s\nNEXT_PUBLIC_SITE_URL=https://new.rishe.store\n' "$POSTGRES_PASSWORD" "$APP_SECRET" > .env
             chmod 600 .env
           fi
+
+          ZIBAL_MERCHANT="$(printf '%s' "$ZIBAL_MERCHANT_B64" | base64 -d)"
+          sed -i '/^ZIBAL_MERCHANT=/d' .env
+          printf 'ZIBAL_MERCHANT=%s\n' "$ZIBAL_MERCHANT" >> .env
+          chmod 600 .env
+          unset ZIBAL_MERCHANT ZIBAL_MERCHANT_B64
 
           docker compose up -d --build --remove-orphans
 

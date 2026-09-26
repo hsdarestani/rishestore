@@ -21,7 +21,7 @@ export default function CheckoutForm({ user, config }: { user: UserSeed; config:
     event.preventDefault();
     setError("");
     if (!items.length) return setError("سبد خرید خالی است.");
-    if (!config.paymentReady) return setError("درگاه پرداخت هنوز در پنل مدیریت فعال نشده است.");
+    if (!config.paymentReady) return setError("درگاه زیبال هنوز روی سرور فعال نشده است.");
 
     setBusy(true);
     const form = new FormData(event.currentTarget);
@@ -50,7 +50,7 @@ export default function CheckoutForm({ user, config }: { user: UserSeed; config:
         body: JSON.stringify({ orderId: orderData.orderId }),
       });
       const paymentData = await paymentResponse.json();
-      if (!paymentResponse.ok) throw new Error(paymentData.error || "اتصال به درگاه انجام نشد.");
+      if (!paymentResponse.ok) throw new Error(paymentData.error || "اتصال به زیبال انجام نشد.");
 
       sessionStorage.setItem("rishe_last_order", orderData.code);
       clear();
@@ -90,10 +90,10 @@ export default function CheckoutForm({ user, config }: { user: UserSeed; config:
           <div><span>ارسال</span><strong>{shipping === 0 ? "رایگان" : toman(shipping)}</strong></div>
           <div className="grand"><span>مبلغ پرداخت</span><strong>{toman(subtotal + shipping)}</strong></div>
         </div>
-        {!config.paymentReady && <p className="alert warning">درگاه پرداخت هنوز تنظیم نشده است. مدیر فروشگاه باید کلید NextPay را در پنل وارد کند.</p>}
+        {!config.paymentReady && <p className="alert warning">متغیر امن ZIBAL_MERCHANT روی سرور پیدا نشد؛ پرداخت تا زمان تنظیم آن غیرفعال است.</p>}
         {error && <p className="alert error">{error}</p>}
-        <button className="btn btn-primary btn-wide" disabled={busy || !config.paymentReady}>{busy ? "در حال اتصال…" : "تأیید و پرداخت"}</button>
-        <small className="muted">پس از تأیید، به درگاه امن پرداخت منتقل می‌شوید.</small>
+        <button className="btn btn-primary btn-wide" disabled={busy || !config.paymentReady}>{busy ? "در حال اتصال به زیبال…" : "تأیید و پرداخت با زیبال"}</button>
+        <small className="muted">پس از تأیید، به صفحه امن درگاه زیبال منتقل می‌شوید.</small>
       </aside>
     </form>
   );

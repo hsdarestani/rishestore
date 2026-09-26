@@ -149,6 +149,27 @@ async function main() {
     });
   }
 
+  const brandImages: Record<string, string> = {
+    "rice-hashemi": "/brand/products/rice.png",
+    "gilan-tea": "/brand/products/tea.png",
+    "natural-honey": "/brand/products/honey.jpg",
+    "dry-corn": "/brand/products/corn.png",
+    "iranian-chickpeas": "/brand/products/chickpeas.png",
+    "pinto-beans": "/brand/products/pinto-beans.png",
+    "red-beans": "/brand/products/red-beans.png",
+    "dry-broad-beans": "/brand/products/broad-beans.png",
+    "local-lentils": "/brand/products/lentils-small.png",
+    "red-lentils": "/brand/products/lentils-large.png",
+    "iranian-split-peas": "/brand/products/split-peas.png"
+  };
+
+  for (const [slug, image] of Object.entries(brandImages)) {
+    const product = await db.product.findUnique({ where: { slug } });
+    if (product && !product.image) {
+      await db.product.update({ where: { id: product.id }, data: { image } });
+    }
+  }
+
   for (const page of pages) {
     await db.page.upsert({ where: { slug: page.slug }, create: page, update: {} });
   }

@@ -22,14 +22,17 @@ export default async function HomePage() {
             <h1>روایت اصالت،<br/><em>مستقیم از مزرعه پدری</em></h1>
             <p>ما در «ریشه» کیفیت را فدای ظاهر نمی‌کنیم. هر محصول، پیش از رسیدن به دست شما، در آشپزخانه ما پخته و سنجیده می‌شود تا طعم واقعی و بی‌آلایش محصول به سفره برسد.</p>
             <div className="hero-actions"><Link className="btn btn-primary" href="/shop">خرید محصولات</Link><Link className="btn btn-ghost" href="/why-rishe">چرا ریشه؟</Link></div>
-            <div className="trust-strip"><span>اطلاعات شفاف محصول</span><span>تست پخت و بررسی کیفیت</span><span>مسیر خرید کوتاه</span></div>
+            <div className="trust-strip"><span>محصولات دست‌چین</span><span>تست پخت و بررسی کیفیت</span><span>کیفیت، به شرط پخت</span></div>
           </div>
-          <div className="hero-art" aria-label="محصولات ریشه">
-            <div className="hero-bowl hero-rice"><b>برنج</b></div>
-            <div className="hero-bowl hero-legume"><b>حبوبات</b></div>
-            <div className="hero-jar"><b>عسل</b></div>
-            <div className="hero-cup"><b>چای</b></div>
-            <div className="hero-note">به شرط پخت؛ جزئیات هر محصول را قبل از خرید ببینید.</div>
+
+          <div className="hero-art hero-photo">
+            <img className="hero-main-photo" src="/brand/hero.png" alt="محصولات محلی و دست‌چین ریشه" />
+            <div className="hero-product-stack" aria-hidden>
+              <img src="/brand/products/chickpeas.png" alt="" />
+              <img src="/brand/products/tea.png" alt="" />
+              <img src="/brand/products/honey.jpg" alt="" />
+            </div>
+            <div className="hero-note">همان تصاویر و هویت بصری فعلی ریشه، روی زیرساخت مستقل جدید.</div>
           </div>
         </div>
       </section>
@@ -43,25 +46,25 @@ export default async function HomePage() {
 
       <section className="section section-tint">
         <div className="container">
-          <div className="section-heading row-heading"><div><span>انتخاب‌های فروشگاه</span><h2>محصولات ریشه</h2><p>قیمت و موجودی فقط زمانی برای خرید فعال می‌شود که در پنل مدیریت تأیید شده باشد.</p></div><Link href="/shop">رفتن به فروشگاه ←</Link></div>
+          <div className="section-heading row-heading"><div><span>انتخاب‌های فروشگاه</span><h2>محصولات ریشه</h2><p>اطلاعات هر محصول، از تصویر و وزن تا قیمت و موجودی، مستقیم از کاتالوگ فروشگاه مدیریت می‌شود.</p></div><Link href="/shop">رفتن به فروشگاه ←</Link></div>
           {featured.length ? <div className="product-grid">{featured.map((p) => <ProductCard key={p.id} product={p} />)}</div> : <div className="empty-state">محصولات در حال انتقال به فروشگاه جدید هستند.</div>}
         </div>
       </section>
 
       <section className="section container">
         <div className="why-grid">
-          <div className="section-heading"><span>چرا ریشه؟</span><h2>اعتماد باید در اطلاعات محصول دیده شود.</h2><p>روایت برند حفظ شده، اما تصمیم خرید روی اطلاعات کاربردی بنا می‌شود.</p><Link className="btn btn-secondary" href="/why-rishe">داستان و روش انتخاب ریشه</Link></div>
+          <div className="section-heading"><span>چرا ریشه؟</span><h2>اعتماد باید در اطلاعات محصول دیده شود.</h2><p>هویت فعلی ریشه حفظ شده و تجربه خرید روی اطلاعات واقعی محصول، کیفیت و نتیجه پخت بنا می‌شود.</p><Link className="btn btn-secondary" href="/why-rishe">داستان و روش انتخاب ریشه</Link></div>
           <div className="trust-cards">
-            <article><i>۱</i><h3>تست کیفیت</h3><p>اطلاعات بررسی و نتیجه پخت هر سری می‌تواند در همان صفحه محصول ثبت شود.</p></article>
-            <article><i>۲</i><h3>اطلاعات شفاف</h3><p>وزن، قیمت، موجودی، کاربرد و مبدأ در یک صفحه؛ بدون جست‌وجو بین چند بخش.</p></article>
-            <article><i>۳</i><h3>به شرط پخت</h3><p>وعده کیفیت فقط وقتی معنا دارد که شرایطش قبل از خرید روشن باشد.</p></article>
+            <article><i>۱</i><h3>تست کیفیت</h3><p>نتیجه بررسی و پخت هر محصول کنار همان کالا نگهداری می‌شود.</p></article>
+            <article><i>۲</i><h3>اطلاعات شفاف</h3><p>وزن، قیمت، موجودی، کاربرد و مبدأ در یک صفحه و بدون ابهام.</p></article>
+            <article><i>۳</i><h3>به شرط پخت</h3><p>وعده اصلی ریشه به‌صورت واضح در تجربه خرید حفظ شده است.</p></article>
           </div>
         </div>
       </section>
 
       {packs.length > 0 && <section className="section section-dark"><div className="container"><div className="section-heading light"><span>پک‌ها</span><h2>چند انتخاب کنار هم، یک خرید ساده‌تر.</h2></div><div className="product-grid">{packs.map((p) => <ProductCard key={p.id} product={p} />)}</div><Link className="btn btn-light" href="/packs">همه پک‌ها</Link></div></section>}
 
-      <section className="section container story-band"><div><span className="eyebrow">داستان کوتاه ریشه</span><h2>محصول اول، روایت بعد.</h2></div><p>ریشه می‌خواهد تجربه خرید را از «دیدن یک ویترین» به «شناختن محصول و بعد خرید» تبدیل کند. مجله، راهنماهای کیفیت و توضیحات محصول همه به همین مسیر وصل‌اند.</p><Link href="/about">بیشتر درباره ریشه ←</Link></section>
+      <section className="section container story-band"><div><span className="eyebrow">داستان کوتاه ریشه</span><h2>محصول اول، روایت بعد.</h2></div><p>ریشه تجربه خرید را از یک ویترین ساده به شناخت محصول، شیوه تأمین، کیفیت و نتیجه پخت تبدیل می‌کند.</p><Link href="/about">بیشتر درباره ریشه ←</Link></section>
 
       {reviews.length > 0 && <section className="section container"><div className="section-heading"><span>تجربه مشتریان</span><h2>نظرهای ثبت‌شده</h2></div><div className="review-grid">{reviews.map((r) => <blockquote key={r.id}><div>{"★".repeat(Math.max(1, Math.min(5, r.rating)))}</div><p>{r.text}</p><cite>{r.name}</cite></blockquote>)}</div></section>}
 

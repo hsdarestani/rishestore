@@ -9,14 +9,15 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const flat = Math.max(0, Math.trunc(Number(body.shippingFlatRate || 0)));
     const threshold = Math.max(0, Math.trunc(Number(body.freeShippingThreshold || 0)));
+
     await Promise.all([
       setSetting("storeName", String(body.storeName || "ریشه").trim()),
       setSetting("storePhone", String(body.storePhone || "").trim()),
       setSetting("instagramUrl", String(body.instagramUrl || "").trim()),
       setSetting("shippingFlatRate", String(flat)),
       setSetting("freeShippingThreshold", String(threshold)),
-      String(body.nextpayApiKey || "").trim() ? setSetting("nextpayApiKey", String(body.nextpayApiKey).trim(), true) : Promise.resolve(null),
     ]);
+
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error(error);
