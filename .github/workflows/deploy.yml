@@ -1,0 +1,73 @@
+name: Deploy Rishe Store
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: rishe-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate deployment secrets
+        env:
+          HOST: ${{ secrets.HOST }}
+          PASS: ${{ secrets.PASS }}
+        run: |
+          test -n "$HOST" || (echo "HOST secret is missing" && exit 1)
+          test -n "$PASS" || (echo "PASS secret is missing" && exit 1)
+
+      - name: Install SSH helper
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Deploy to server
+        env:
+          HOST: ${{ secrets.HOST }}
+          PASS: ${{ secrets.PASS }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          USER_NAME="${SSH_USER:-root}"
+          export SSHPASS="$PASS"
+          sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 "$USER_NAME@$HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+
+          if ! command -v git >/dev/null 2>&1; then
+            apt-get update
+            apt-get install -y git curl ca-certificates openssl
+          fi
+
+          if ! command -v docker >/dev/null 2>&1; then
+            curl -fsSL https://get.docker.com | sh
+          fi
+
+          if command -v ufw >/dev/null 2>&1 && ufw status | grep -q "Status: active"; then
+            ufw allow 80/tcp || true
+            ufw allow 443/tcp || true
+            ufw allow 443/udp || true
+          fi
+
+          APP_DIR=/opt/rishestore
+          if [ ! -d "$APP_DIR/.git" ]; then
+            rm -rf "$APP_DIR"
+            git clone https://github.com/hsdarestani/rishestore.git "$APP_DIR"
+          fi
+
+          cd "$APP_DIR"
+          git fetch origin main
+          git reset --hard origin/main
+
+          if [ ! -f .env ]; then
+            POSTGRES_PASSWORD="$(openssl rand -hex 20)"
+            APP_SECRET="$(openssl rand -hex 32)"
+            printf 'POSTGRES_PASSWORD=%s\nAPP_SECRET=%s\nNEXT_PUBLIC_SITE_URL=https://new.rishe.store\n' "$POSTGRES_PASSWORD" "$APP_SECRET" > .env
+            chmod 600 .env
+          fi
+
+          docker compose up -d --build --remove-orphans
+          docker image prune -f
+          docker compose ps
+          REMOTE
