@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/auth";
+import { requireCapability } from "@/lib/auth";
 import { db } from "@/lib/db";
 import AdvancedAdminPanel from "@/components/AdvancedAdminPanel";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdvancedAdminPage() {
-  const admin = await requireAdmin();
+  const admin = await requireCapability("admin.access");
   if (!admin) redirect("/login");
 
   const [

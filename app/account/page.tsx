@@ -31,7 +31,7 @@ export default async function AccountPage() {
   return <div className="page-shell container">
     <header className="account-head">
       <div><span className="eyebrow">حساب ریشه</span><h1>{user.name}</h1><p>{user.phone}{user.email?" · "+user.email:""}</p></div>
-      <div className="hero-actions">{user.role === "ADMIN" && <Link className="btn btn-secondary" href="/admin">پنل مدیریت</Link>}<form action="/api/auth/logout" method="post"><button className="btn btn-ghost">خروج</button></form></div>
+      <div className="hero-actions">{user.role !== "CUSTOMER" && <Link className="btn btn-secondary" href="/admin">پنل مدیریت</Link>}<form action="/api/auth/logout" method="post"><button className="btn btn-ghost">خروج</button></form></div>
     </header>
 
     <section className="account-metrics">

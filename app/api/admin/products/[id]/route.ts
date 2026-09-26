@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { assertSameOrigin, requireAdmin } from "@/lib/auth";
+import { assertSameOrigin, requireCapability } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 const n = (v: unknown) => { const x = Number(v || 0); return Number.isFinite(x) ? Math.max(0, Math.trunc(x)) : 0; };
@@ -9,7 +9,7 @@ const text = (v: unknown) => String(v || "").trim() || null;
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     assertSameOrigin(request);
-    if (!(await requireAdmin())) return NextResponse.json({ error: "دسترسی ندارید." }, { status: 403 });
+    if (!(await requireCapability("catalog.write"))) return NextResponse.json({ error: "دسترسی ندارید." }, { status: 403 });
     const { id } = await params;
     const body = await request.json();
     const slug = String(body.slug || "").trim().toLowerCase();

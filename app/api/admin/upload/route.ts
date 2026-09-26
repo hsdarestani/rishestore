@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";
-import { assertSameOrigin, requireAdmin } from "@/lib/auth";
+import { assertSameOrigin, requireCapability } from "@/lib/auth";
 
 const allowed = new Map([["image/jpeg","jpg"],["image/png","png"],["image/webp","webp"]]);
 
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    if (!(await requireAdmin())) return NextResponse.json({ error: "دسترسی ندارید." }, { status: 403 });
+    if (!(await requireCapability("media.write"))) return NextResponse.json({ error: "دسترسی ندارید." }, { status: 403 });
     const data = await request.formData();
     const file = data.get("file");
     if (!(file instanceof File)) return NextResponse.json({ error: "فایل پیدا نشد." }, { status: 400 });

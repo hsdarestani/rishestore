@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { assertSameOrigin, requireAdmin } from "@/lib/auth";
+import { assertSameOrigin, requireCapability } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export async function PATCH(request: Request) {
   try {
     assertSameOrigin(request);
-    if (!(await requireAdmin())) return NextResponse.json({ error: "دسترسی ندارید." }, { status: 403 });
+    if (!(await requireCapability("content.write"))) return NextResponse.json({ error: "دسترسی ندارید." }, { status: 403 });
     const body = await request.json();
     const kind = String(body.kind || "");
     const id = String(body.id || "");

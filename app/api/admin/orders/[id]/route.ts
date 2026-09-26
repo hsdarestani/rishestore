@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { assertSameOrigin, requireAdmin } from "@/lib/auth";
+import { assertSameOrigin, requireCapability } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 const allowed = new Set(["PENDING","PROCESSING","SHIPPED","COMPLETED","CANCELED"]);
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   assertSameOrigin(request);
-  if (!(await requireAdmin())) return NextResponse.json({ error: "دسترسی ندارید." }, { status: 403 });
+  if (!(await requireCapability("orders.write"))) return NextResponse.json({ error: "دسترسی ندارید." }, { status: 403 });
   const { id } = await params;
   const body = await request.json();
   const status = String(body.status || "");

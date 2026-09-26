@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { assertSameOrigin, requireAdmin } from "@/lib/auth";
+import { assertSameOrigin, requireCapability } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 function num(value: unknown) { const n = Number(value || 0); return Number.isFinite(n) ? Math.max(0, Math.trunc(n)) : 0; }
@@ -7,7 +7,7 @@ function num(value: unknown) { const n = Number(value || 0); return Number.isFin
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    if (!(await requireAdmin())) return NextResponse.json({ error: "دسترسی ندارید." }, { status: 403 });
+    if (!(await requireCapability("catalog.write"))) return NextResponse.json({ error: "دسترسی ندارید." }, { status: 403 });
     const body = await request.json();
     const name = String(body.name || "").trim();
     const slug = String(body.slug || "").trim().toLowerCase();

@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { assertSameOrigin, requireAdmin } from "@/lib/auth";
+import { assertSameOrigin, hasCapability, requireCapability } from "@/lib/auth";
 
 const str = (v: unknown) => String(v ?? "").trim();
 const opt = (v: unknown) => str(v) || null;
@@ -12,6 +12,19 @@ const num = (v: unknown, min = 0) => {
 };
 const bps = (v: unknown) => Math.min(10000, num(v));
 const code = (prefix: string) => prefix + "-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2, 7).toUpperCase();
+
+function capabilityForAction(action: string) {
+  if (/^(promotion|channel-price|loyalty)\./.test(action)) return "crm.write";
+  if (/^event\./.test(action)) return "events.write";
+  if (/^purchase\./.test(action)) return "procurement.write";
+  if (/^(voucher|treasury)\./.test(action)) return "finance.write";
+  if (/^b2b\./.test(action)) return "b2b.write";
+  if (/^shipment\./.test(action)) return "logistics.write";
+  if (/^tax\./.test(action)) return "tax.write";
+  if (/^analytics\./.test(action)) return "analytics.write";
+  if (/^(config|backup)\./.test(action)) return "operations.write";
+  return "admin.access";
+}
 
 async function audit(userId: string, action: string, entityType: string, entityId?: string, metadata?: Record<string, unknown>) {
   await db.auditLog.create({
@@ -76,11 +89,13 @@ async function latestSupplierBalance(tx: any, supplierId: string) {
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const admin = await requireAdmin();
+    const admin = await requireCapability("admin.access");
     if (!admin) return NextResponse.json({ error: "دسترسی ندارید." }, { status: 403 });
 
     const body = await request.json();
     const action = str(body.action);
+    const required = capabilityForAction(action);
+    if (!hasCapability(admin, required)) return NextResponse.json({ error: "برای این بخش دسترسی کافی ندارید." }, { status: 403 });
     let result: any;
 
     switch (action) {

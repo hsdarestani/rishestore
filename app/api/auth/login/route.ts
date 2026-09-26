@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "شماره موبایل یا رمز عبور درست نیست." }, { status: 401 });
     }
     await setSession(user.id);
-    return NextResponse.json({ ok: true, redirect: user.role === "ADMIN" ? "/admin" : "/account" });
+    return NextResponse.json({ ok: true, redirect: user.role === "CUSTOMER" ? "/account" : "/admin" });
   } catch {
     return NextResponse.json({ error: "ورود انجام نشد." }, { status: 500 });
   }

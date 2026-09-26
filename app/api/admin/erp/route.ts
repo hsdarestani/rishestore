@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { randomUUID } from "crypto";
 import { db } from "@/lib/db";
-import { assertSameOrigin, requireAdmin } from "@/lib/auth";
+import { assertSameOrigin, hasCapability, requireCapability } from "@/lib/auth";
 
 const str = (value: unknown) => String(value ?? "").trim();
 const int = (value: unknown, min = 0) => {
@@ -11,6 +11,18 @@ const int = (value: unknown, min = 0) => {
 };
 const optional = (value: unknown) => str(value) || null;
 const code = (prefix: string) => prefix + "-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
+
+function capabilityForAction(action: string) {
+  if (/^(warehouse|inventory|bom|production)\./.test(action)) return "inventory.write";
+  if (/^(supplier|purchase)\./.test(action)) return "procurement.write";
+  if (/^(account|voucher|treasury|tax)\./.test(action)) return "finance.write";
+  if (/^manual-sale\./.test(action)) return "sales.write";
+  if (/^(b2b|consignment)\./.test(action)) return "b2b.write";
+  if (/^(carrier|shipment)\./.test(action)) return "logistics.write";
+  if (/^goal\./.test(action)) return "analytics.write";
+  if (/^(job|incident)\./.test(action)) return "operations.write";
+  return "admin.access";
+}
 
 async function audit(userId: string, action: string, entityType: string, entityId?: string, metadata?: Record<string, unknown>) {
   await db.auditLog.create({
@@ -61,11 +73,13 @@ async function consumeFromWarehouse(tx: any, warehouseId: string, productId: str
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const admin = await requireAdmin();
+    const admin = await requireCapability("admin.access");
     if (!admin) return NextResponse.json({ error: "دسترسی ندارید." }, { status: 403 });
 
     const body = await request.json();
     const action = str(body.action);
+    const required = capabilityForAction(action);
+    if (!hasCapability(admin, required)) return NextResponse.json({ error: "برای این بخش دسترسی کافی ندارید." }, { status: 403 });
     let result: any = null;
 
     switch (action) {

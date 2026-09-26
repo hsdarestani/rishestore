@@ -1,10 +1,30 @@
 import { cookies } from "next/headers";
 import { createHmac, timingSafeEqual } from "crypto";
+import type { User } from "@prisma/client";
 import { db } from "@/lib/db";
 import { normalizePhone } from "@/lib/money";
 
 const COOKIE_NAME = "rishe_session";
 const TTL = 60 * 60 * 24 * 30;
+
+export const STAFF_CAPABILITIES = [
+  "admin.access",
+  "inventory.write",
+  "sales.write",
+  "crm.write",
+  "events.write",
+  "procurement.write",
+  "finance.write",
+  "b2b.write",
+  "logistics.write",
+  "tax.write",
+  "analytics.write",
+  "operations.write",
+  "catalog.write",
+  "orders.write",
+  "content.write",
+  "media.write",
+] as const;
 
 function secret() {
   const value = process.env.APP_SECRET;
@@ -49,7 +69,13 @@ export async function setSession(userId: string) {
 
 export async function clearSession() {
   const jar = await cookies();
-  jar.set(COOKIE_NAME, "", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 0 });
+  jar.set(COOKIE_NAME, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
 }
 
 export async function getCurrentUser() {
@@ -57,6 +83,38 @@ export async function getCurrentUser() {
   const userId = verifyToken(jar.get(COOKIE_NAME)?.value);
   if (!userId) return null;
   return db.user.findUnique({ where: { id: userId } });
+}
+
+function permissionList(user: Pick<User, "role" | "permissions"> | null | undefined) {
+  if (!user) return new Set<string>();
+  if (user.role === "ADMIN") return new Set<string>(["*"]);
+  const raw: unknown = user.permissions;
+  if (Array.isArray(raw)) return new Set(raw.map(String));
+  if (raw && typeof raw === "object") {
+    return new Set(Object.entries(raw as Record<string, unknown>).filter(([, value]) => Boolean(value)).map(([key]) => key));
+  }
+  return new Set<string>();
+}
+
+export function hasCapability(user: Pick<User, "role" | "permissions"> | null | undefined, capability: string) {
+  if (!user) return false;
+  if (user.role === "ADMIN") return true;
+  if (user.role !== "STAFF") return false;
+  const permissions = permissionList(user);
+  return permissions.has("*") || permissions.has(capability);
+}
+
+export async function requireCapability(capability: string) {
+  const user = await getCurrentUser();
+  if (!hasCapability(user, capability)) return null;
+  return user;
+}
+
+export async function requireAnyCapability(capabilities: string[]) {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  if (user.role === "ADMIN") return user;
+  return capabilities.some((capability) => hasCapability(user, capability)) ? user : null;
 }
 
 export async function requireAdmin() {
