@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { getStoreConfig } from "@/lib/settings";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://new.rishe.store";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

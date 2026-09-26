@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getStoreConfig } from "@/lib/settings";
 import AdminPanel from "@/components/AdminPanel";
+import LegacyImportButton from "@/components/LegacyImportButton";
 
 export const dynamic = "force-dynamic";
 
@@ -21,5 +22,5 @@ export default async function AdminPage() {
   ]);
 
   const serializedOrders = orders.map((o) => ({ ...o, createdAt: o.createdAt.toISOString(), updatedAt: o.updatedAt.toISOString() }));
-  return <div className="admin-page container"><AdminPanel products={products} categories={categories} orders={serializedOrders} pages={pages} posts={posts} faqs={faqs} settings={settings} /></div>;
+  return <div className="admin-page container"><LegacyImportButton /><AdminPanel products={products} categories={categories} orders={serializedOrders} pages={pages} posts={posts} faqs={faqs} settings={settings} /></div>;
 }
