@@ -168,9 +168,14 @@ model Order {
   address         String
   postalCode      String?
   notes           String?
+  salesChannel    String        @default("website")
   status          OrderStatus   @default(PENDING)
   paymentStatus   PaymentStatus @default(UNPAID)
   subtotal        Int
+  discount        Int           @default(0)
+  promotionCode   String?
+  loyaltyPointsUsed Int         @default(0)
+  loyaltyPointsEarned Int       @default(0)
   shippingCost    Int
   total           Int
   paymentProvider String?
