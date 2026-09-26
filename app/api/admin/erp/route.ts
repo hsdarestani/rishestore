@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { randomUUID } from "crypto";
 import { db } from "@/lib/db";
 import { assertSameOrigin, requireAdmin } from "@/lib/auth";
@@ -19,7 +20,7 @@ async function audit(userId: string, action: string, entityType: string, entityI
       entityType,
       entityId: entityId || null,
       correlationId: randomUUID(),
-      metadata: metadata || undefined,
+      metadata: metadata ? (metadata as Prisma.InputJsonValue) : undefined,
     },
   });
 }
@@ -401,7 +402,7 @@ export async function POST(request: Request) {
       case "job.create": {
         const key = str(body.idempotencyKey) || randomUUID();
         result = await db.operationJob.create({
-          data: { type: str(body.type), aggregateId: optional(body.aggregateId), idempotencyKey: key, status: "pending", payload: body.payload && typeof body.payload === "object" ? body.payload : undefined },
+          data: { type: str(body.type), aggregateId: optional(body.aggregateId), idempotencyKey: key, status: "pending", payload: body.payload && typeof body.payload === "object" ? (body.payload as Prisma.InputJsonValue) : undefined },
         });
         await audit(admin.id, action, "operation_job", result.id);
         break;
