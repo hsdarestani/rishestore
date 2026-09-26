@@ -1,0 +1,97 @@
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/auth";
+import { db } from "@/lib/db";
+import AdvancedAdminPanel from "@/components/AdvancedAdminPanel";
+
+export const dynamic = "force-dynamic";
+
+export default async function AdvancedAdminPage() {
+  const admin = await requireAdmin();
+  if (!admin) redirect("/login");
+
+  const [
+    products,
+    customers,
+    warehouses,
+    promotions,
+    channelPrices,
+    loyalty,
+    events,
+    eventSales,
+    purchaseOrders,
+    suppliers,
+    purchaseReceipts,
+    supplierLedger,
+    treasuryAccounts,
+    treasuryProviders,
+    treasuryTransactions,
+    treasuryMatches,
+    treasurySettlements,
+    b2bAccounts,
+    b2bDispatches,
+    b2bReturns,
+    b2bReports,
+    b2bLedger,
+    shipments,
+    tracking,
+    shipmentCosts,
+    taxProfiles,
+    taxInvoices,
+    taxMappings,
+    taxEvents,
+    analyticsSources,
+    campaigns,
+    priceHistory,
+    alerts,
+    snapshots,
+    backups,
+    jobs,
+  ] = await Promise.all([
+    db.product.findMany({ orderBy: { name: "asc" } }),
+    db.customer.findMany({ orderBy: { updatedAt: "desc" }, take: 200 }),
+    db.warehouse.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
+    db.promotion.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
+    db.channelPrice.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
+    db.loyaltyEntry.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
+    db.eventSaleEvent.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
+    db.eventSale.findMany({ orderBy: { occurredAt: "desc" }, take: 150 }),
+    db.purchaseOrder.findMany({ include: { supplier: true, items: { include: { product: true } } }, orderBy: { createdAt: "desc" }, take: 150 }),
+    db.supplier.findMany({ orderBy: { name: "asc" } }),
+    db.purchaseReceipt.findMany({ orderBy: { receivedAt: "desc" }, take: 150 }),
+    db.supplierLedgerEntry.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
+    db.treasuryAccount.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
+    db.treasuryProvider.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
+    db.treasuryTransaction.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
+    db.treasuryMatch.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
+    db.treasurySettlement.findMany({ orderBy: { settledAt: "desc" }, take: 150 }),
+    db.b2BAccount.findMany({ orderBy: { updatedAt: "desc" }, take: 150 }),
+    db.b2BDispatch.findMany({ orderBy: { dispatchedAt: "desc" }, take: 150 }),
+    db.b2BReturn.findMany({ orderBy: { returnedAt: "desc" }, take: 150 }),
+    db.b2BSalesReport.findMany({ orderBy: { reportedAt: "desc" }, take: 150 }),
+    db.b2BLedgerEntry.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
+    db.shipment.findMany({ include: { order: true, carrier: true }, orderBy: { createdAt: "desc" }, take: 150 }),
+    db.shipmentTrackingEvent.findMany({ orderBy: { occurredAt: "desc" }, take: 200 }),
+    db.shipmentCost.findMany({ orderBy: { incurredAt: "desc" }, take: 200 }),
+    db.taxProfile.findMany({ orderBy: { createdAt: "desc" } }),
+    db.taxInvoice.findMany({ include: { order: true, profile: true }, orderBy: { createdAt: "desc" }, take: 150 }),
+    db.taxProductMapping.findMany({ orderBy: { updatedAt: "desc" }, take: 200 }),
+    db.taxEvent.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
+    db.analyticsSource.findMany({ orderBy: { createdAt: "desc" } }),
+    db.analyticsCampaign.findMany({ orderBy: { createdAt: "desc" } }),
+    db.priceHistory.findMany({ orderBy: { effectiveFrom: "desc" }, take: 200 }),
+    db.analyticsAlert.findMany({ orderBy: { lastSeenAt: "desc" }, take: 200 }),
+    db.configSnapshot.findMany({ orderBy: { createdAt: "desc" }, take: 50 }),
+    db.backupRecord.findMany({ orderBy: { createdAt: "desc" }, take: 50 }),
+    db.operationJob.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
+  ]);
+
+  const data = JSON.parse(JSON.stringify({
+    products, customers, warehouses, promotions, channelPrices, loyalty, events, eventSales,
+    purchaseOrders, suppliers, purchaseReceipts, supplierLedger, treasuryAccounts, treasuryProviders,
+    treasuryTransactions, treasuryMatches, treasurySettlements, b2bAccounts, b2bDispatches, b2bReturns,
+    b2bReports, b2bLedger, shipments, tracking, shipmentCosts, taxProfiles, taxInvoices, taxMappings,
+    taxEvents, analyticsSources, campaigns, priceHistory, alerts, snapshots, backups, jobs,
+  }));
+
+  return <div className="admin-page"><AdvancedAdminPanel data={data} /></div>;
+}
