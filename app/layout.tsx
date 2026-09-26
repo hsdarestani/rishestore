@@ -9,6 +9,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://new.rishe.store";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  manifest: "/manifest.webmanifest",
   metadataBase: new URL(siteUrl),
   title: { default: "ریشه | روایت اصالت، مستقیم از مزرعه پدری", template: "%s | ریشه" },
   description: "فروشگاه ریشه؛ محصولات دست‌چین ایرانی با تست پخت، قیمت و موجودی شفاف و روایت تامین هر محصول.",

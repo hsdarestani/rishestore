@@ -166,6 +166,38 @@ export async function POST(request: Request) {
         break;
       }
 
+      case "event.device.create": {
+        const eventId = str(body.eventId);
+        const event = await db.eventSaleEvent.findUnique({ where: { id: eventId } });
+        if (!event) throw new Error("NOT_FOUND");
+        const days = Math.min(365, Math.max(1, num(body.days, 30)));
+        const token = "RPOS_" + randomUUID().replace(/-/g, "").toUpperCase();
+        const tokenHash = createHash("sha256").update(token).digest("hex");
+        await db.eventSeller.upsert({
+          where: { eventId_userId: { eventId, userId: admin.id } },
+          create: { eventId, userId: admin.id, displayName: admin.name, active: true },
+          update: { displayName: admin.name, active: true },
+        });
+        const session = await db.eventDeviceSession.create({
+          data: {
+            tokenHash,
+            eventId,
+            sellerUserId: admin.id,
+            deviceName: opt(body.deviceName) || "دستگاه فروش",
+            expiresAt: new Date(Date.now() + days * 86400000),
+          },
+        });
+        await audit(admin.id, action, "event_device_session", session.id, { eventId, deviceName: session.deviceName, expiresAt: session.expiresAt.toISOString() });
+        return NextResponse.json({ ok: true, result: { id: session.id, token, expiresAt: session.expiresAt } });
+      }
+
+      case "event.device.revoke": {
+        const id = str(body.id);
+        result = await db.eventDeviceSession.update({ where: { id }, data: { revokedAt: new Date() } });
+        await audit(admin.id, action, "event_device_session", id, { revoked: true });
+        break;
+      }
+
       case "event.create": {
         const name = str(body.name);
         if (!name) return NextResponse.json({ error: "نام ایونت لازم است." }, { status: 400 });

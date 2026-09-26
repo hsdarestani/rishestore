@@ -46,6 +46,32 @@ function Table({heads,children}:{heads:string[];children:ReactNode}){
 }
 function Empty(){return <div className="erp-empty">هنوز رکوردی ثبت نشده است.</div>}
 
+function DeviceTokenCreator({events,devices}:{events:any[];devices:any[]}){
+  const [token,setToken]=useState("");
+  const [message,setMessage]=useState("");
+  async function create(e:FormEvent<HTMLFormElement>){
+    e.preventDefault();setMessage("در حال ساخت…");setToken("");
+    const fd=new FormData(e.currentTarget);
+    try{
+      const x=await api({action:"event.device.create",...Object.fromEntries(fd.entries())});
+      setToken(x.result?.token||"");setMessage("کد ساخته شد. فقط همین بار نمایش داده می‌شود.");
+      setTimeout(()=>{ if(!x.result?.token) location.reload(); },300);
+    }catch(err){setMessage(err instanceof Error?err.message:"خطا")}
+  }
+  return <div>
+    <form className="erp-form" onSubmit={create}>
+      <div className="form-grid">
+        <label>ایونت<select name="eventId" required><option value="">انتخاب</option>{events.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
+        <label>نام دستگاه<input name="deviceName" placeholder="مثلاً صندوق ۱"/></label>
+        <label>اعتبار روز<input name="days" type="number" min="1" max="365" defaultValue="30"/></label>
+      </div>
+      <div className="erp-form-actions"><button className="btn btn-primary btn-sm">ساخت کد دستگاه</button><small>{message}</small></div>
+    </form>
+    {token&&<div className="device-token"><span>کد ورود دستگاه</span><code>{token}</code><button type="button" onClick={()=>navigator.clipboard.writeText(token)}>کپی</button><p>این کد خام در دیتابیس ذخیره نمی‌شود. بعد از بستن صفحه قابل بازیابی نیست.</p></div>}
+    {devices.length>0&&<div className="erp-mini-list device-list">{devices.map(x=><div key={x.id}><strong>{x.deviceName||"دستگاه فروش"}</strong><span>{x.revokedAt?"لغو شده":new Date(x.expiresAt)<new Date()?"منقضی":"فعال"} · آخرین اتصال {d(x.lastSeenAt)}</span><b>{x.revokedAt?"—":<button className="erp-link-button" onClick={()=>confirm("دسترسی این دستگاه لغو شود؟")&&api({action:"event.device.revoke",id:x.id}).then(()=>location.reload())}>لغو</button>}</b></div>)}</div>}
+  </div>
+}
+
 export default function AdvancedAdminPanel({data}:Props){
   const [tab,setTab]=useState<string>("crm");
   const customerBalance=useMemo(()=>{
@@ -127,6 +153,7 @@ export default function AdvancedAdminPanel({data}:Props){
             <label>انبار<select name="warehouseId"><option value="">بدون اتصال انبار</option>{warehouseOptions}</select></label>
             <label>شروع<input name="startsAt" type="datetime-local"/></label><label>پایان<input name="endsAt" type="datetime-local"/></label>
           </div></Form></Box>
+          <Box title="دستگاه‌های POS" text="برای هر موبایل یا تبلت یک کد مستقل بساز. فروش آفلاین روی دستگاه صف می‌شود و بعد Sync می‌شود."><DeviceTokenCreator events={data.events||[]} devices={data.eventDevices||[]}/><a className="btn btn-secondary btn-sm" href="/pos" target="_blank">باز کردن POS ↗</a></Box>
           <Box title="ثبت فروش ایونت"><Form action="event.sale"><div className="form-grid">
             <label>ایونت<select name="eventId" required><option value="">انتخاب</option>{(data.events||[]).map((x:any)=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
             <label>محصول<select name="productId" required><option value="">انتخاب</option>{productOptions}</select></label>

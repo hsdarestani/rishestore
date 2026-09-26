@@ -18,6 +18,7 @@ export default async function AdvancedAdminPage() {
     channelPrices,
     loyalty,
     events,
+    eventDevices,
     eventSales,
     purchaseOrders,
     suppliers,
@@ -58,6 +59,7 @@ export default async function AdvancedAdminPage() {
     db.channelPrice.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
     db.loyaltyEntry.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
     db.eventSaleEvent.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
+    db.eventDeviceSession.findMany({ select: { id: true, eventId: true, sellerUserId: true, deviceName: true, expiresAt: true, revokedAt: true, lastSeenAt: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 100 }),
     db.eventSale.findMany({ orderBy: { occurredAt: "desc" }, take: 150 }),
     db.purchaseOrder.findMany({ include: { supplier: true, items: { include: { product: true } } }, orderBy: { createdAt: "desc" }, take: 150 }),
     db.supplier.findMany({ orderBy: { name: "asc" } }),
@@ -92,7 +94,7 @@ export default async function AdvancedAdminPage() {
   ]);
 
   const data = JSON.parse(JSON.stringify({
-    products, orders, customers, warehouses, promotions, channelPrices, loyalty, events, eventSales,
+    products, orders, customers, warehouses, promotions, channelPrices, loyalty, events, eventDevices, eventSales,
     purchaseOrders, suppliers, purchaseReceipts, supplierLedger, accountingAccounts, vouchers, treasuryAccounts, treasuryProviders,
     treasuryTransactions, treasuryMatches, treasurySettlements, b2bAccounts, b2bDispatches, b2bReturns,
     b2bReports, b2bLedger, shipments, tracking, shipmentCosts, taxProfiles, taxInvoices, taxMappings,

@@ -20,7 +20,8 @@ export default function SiteChrome({
 }) {
   const pathname = usePathname();
   const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
-  if (isAdmin) return <>{children}</>;
+  const isPos = pathname === "/pos" || pathname.startsWith("/pos/");
+  if (isAdmin || isPos) return <>{children}</>;
 
   return <>
     <Header storeName={storeName} />
