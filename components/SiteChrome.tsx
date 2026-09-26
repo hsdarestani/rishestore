@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SupportChat from "@/components/SupportChat";
 
 export default function SiteChrome({
   children,
@@ -25,5 +26,6 @@ export default function SiteChrome({
     <Header storeName={storeName} />
     <main>{children}</main>
     <Footer phone={phone} instagram={instagram} bale={bale} />
+    <SupportChat />
   </>;
 }

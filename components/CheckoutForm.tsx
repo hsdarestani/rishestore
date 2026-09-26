@@ -6,16 +6,60 @@ import { toman } from "@/lib/money";
 
 type UserSeed = { name?: string | null; phone?: string | null; email?: string | null } | null;
 type Config = { shippingFlatRate: number; freeShippingThreshold: number; paymentReady: boolean };
+type Quote = { subtotal: number; discount: number; shippingCost: number; total: number; promotionCode?: string | null };
 
 export default function CheckoutForm({ user, config }: { user: UserSeed; config: Config }) {
   const { items, total: subtotal, clear, hydrated } = useCart();
   const [busy, setBusy] = useState(false);
+  const [quoteBusy, setQuoteBusy] = useState(false);
   const [error, setError] = useState("");
+  const [promoMessage, setPromoMessage] = useState("");
+  const [promotionCode, setPromotionCode] = useState("");
+  const [quote, setQuote] = useState<Quote | null>(null);
 
-  const shipping = useMemo(() => {
+  const fallbackShipping = useMemo(() => {
     if (config.freeShippingThreshold > 0 && subtotal >= config.freeShippingThreshold) return 0;
     return config.shippingFlatRate;
   }, [subtotal, config]);
+
+  const effective = quote || {
+    subtotal,
+    discount: 0,
+    shippingCost: fallbackShipping,
+    total: subtotal + fallbackShipping,
+    promotionCode: null,
+  };
+
+  async function applyPromotion() {
+    setError(""); setPromoMessage("");
+    const code = promotionCode.trim();
+    if (!code) {
+      setQuote(null);
+      setPromoMessage("کد تخفیف پاک شد.");
+      return;
+    }
+    setQuoteBusy(true);
+    try {
+      const response = await fetch("/api/orders/quote", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          promotionCode: code,
+          items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "کد تخفیف اعمال نشد.");
+      setQuote(data);
+      setPromotionCode(data.promotionCode || code);
+      setPromoMessage(data.discount > 0 ? "کد تخفیف اعمال شد." : "این کد برای سبد فعلی تخفیفی ایجاد نکرد.");
+    } catch (e) {
+      setQuote(null);
+      setError(e instanceof Error ? e.message : "کد تخفیف اعمال نشد.");
+    } finally {
+      setQuoteBusy(false);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,6 +82,7 @@ export default function CheckoutForm({ user, config }: { user: UserSeed; config:
           address: form.get("address"),
           postalCode: form.get("postalCode"),
           notes: form.get("notes"),
+          promotionCode: promotionCode.trim() || null,
           items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
         }),
       });
@@ -85,15 +130,23 @@ export default function CheckoutForm({ user, config }: { user: UserSeed; config:
         <div className="summary-lines">
           {items.map((item) => <div key={item.productId}><span>{item.name} × {item.quantity.toLocaleString("fa-IR")}</span><strong>{toman(item.price * item.quantity)}</strong></div>)}
         </div>
+
+        <div className="checkout-promo">
+          <label htmlFor="promotionCode">کد تخفیف</label>
+          <div><input id="promotionCode" value={promotionCode} onChange={(e) => { setPromotionCode(e.target.value); setQuote(null); setPromoMessage(""); }} placeholder="مثلاً RISHE10" /><button type="button" onClick={applyPromotion} disabled={quoteBusy}>{quoteBusy ? "…" : "اعمال"}</button></div>
+          {promoMessage && <small>{promoMessage}</small>}
+        </div>
+
         <div className="summary-totals">
-          <div><span>جمع کالاها</span><strong>{toman(subtotal)}</strong></div>
-          <div><span>ارسال</span><strong>{shipping === 0 ? "رایگان" : toman(shipping)}</strong></div>
-          <div className="grand"><span>مبلغ پرداخت</span><strong>{toman(subtotal + shipping)}</strong></div>
+          <div><span>جمع کالاها</span><strong>{toman(effective.subtotal)}</strong></div>
+          {effective.discount > 0 && <div className="discount-line"><span>تخفیف</span><strong>− {toman(effective.discount)}</strong></div>}
+          <div><span>ارسال</span><strong>{effective.shippingCost === 0 ? "رایگان" : toman(effective.shippingCost)}</strong></div>
+          <div className="grand"><span>مبلغ پرداخت</span><strong>{toman(effective.total)}</strong></div>
         </div>
         {!config.paymentReady && <p className="alert warning">متغیر امن ZIBAL_MERCHANT روی سرور پیدا نشد؛ پرداخت تا زمان تنظیم آن غیرفعال است.</p>}
         {error && <p className="alert error">{error}</p>}
         <button className="btn btn-primary btn-wide" disabled={busy || !config.paymentReady}>{busy ? "در حال اتصال به زیبال…" : "تأیید و پرداخت با زیبال"}</button>
-        <small className="muted">پس از تأیید، به صفحه امن درگاه زیبال منتقل می‌شوید.</small>
+        <small className="muted">پس از تأیید، به صفحه امن درگاه زیبال منتقل می‌شوید. موجودی سبد هنگام ثبت سفارش برای مدت محدود رزرو می‌شود.</small>
       </aside>
     </form>
   );

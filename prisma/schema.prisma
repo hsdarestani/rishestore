@@ -158,6 +158,7 @@ model Order {
   id              String        @id @default(cuid())
   code            String        @unique
   userId          String?
+  customerId      String?
   user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   customerName    String
   phone           String

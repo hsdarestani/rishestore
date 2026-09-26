@@ -25,6 +25,9 @@ services:
       APP_SECRET: ${APP_SECRET}
       NEXT_PUBLIC_SITE_URL: https://new.rishe.store
       ZIBAL_MERCHANT: ${ZIBAL_MERCHANT}
+      BALE_BOT_TOKEN: ${BALE_BOT_TOKEN:-}
+      BALE_ADMIN_CHAT_ID: ${BALE_ADMIN_CHAT_ID:-}
+      BALE_WEBHOOK_SECRET: ${BALE_WEBHOOK_SECRET:-}
     volumes:
       - uploads:/app/public/uploads
       - brand_assets:/app/public/brand

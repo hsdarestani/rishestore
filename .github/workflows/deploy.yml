@@ -32,11 +32,17 @@ jobs:
           PASS: ${{ secrets.PASS }}
           SSH_USER: ${{ secrets.SSH_USER }}
           ZIBAL_MERCHANT: ${{ secrets.ZIBAL_MERCHANT }}
+          BALE_BOT_TOKEN: ${{ secrets.BALE_BOT_TOKEN }}
+          BALE_ADMIN_CHAT_ID: ${{ secrets.BALE_ADMIN_CHAT_ID }}
+          BALE_WEBHOOK_SECRET: ${{ secrets.BALE_WEBHOOK_SECRET }}
         run: |
           USER_NAME="${SSH_USER:-root}"
           export SSHPASS="$PASS"
           ZIBAL_B64="$(printf '%s' "$ZIBAL_MERCHANT" | base64 -w0)"
-          sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 "$USER_NAME@$HOST" "export ZIBAL_MERCHANT_B64='$ZIBAL_B64'; bash -s" <<'REMOTE'
+          BALE_TOKEN_B64="$(printf '%s' "$BALE_BOT_TOKEN" | base64 -w0)"
+          BALE_CHAT_B64="$(printf '%s' "$BALE_ADMIN_CHAT_ID" | base64 -w0)"
+          BALE_WEBHOOK_B64="$(printf '%s' "$BALE_WEBHOOK_SECRET" | base64 -w0)"
+          sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 "$USER_NAME@$HOST" "export ZIBAL_MERCHANT_B64='$ZIBAL_B64' BALE_TOKEN_B64='$BALE_TOKEN_B64' BALE_CHAT_B64='$BALE_CHAT_B64' BALE_WEBHOOK_B64='$BALE_WEBHOOK_B64'; bash -s" <<'REMOTE'
           set -euo pipefail
 
           if ! command -v git >/dev/null 2>&1; then
@@ -72,10 +78,17 @@ jobs:
           fi
 
           ZIBAL_MERCHANT="$(printf '%s' "$ZIBAL_MERCHANT_B64" | base64 -d)"
-          sed -i '/^ZIBAL_MERCHANT=/d' .env
+          BALE_BOT_TOKEN="$(printf '%s' "$BALE_TOKEN_B64" | base64 -d)"
+          BALE_ADMIN_CHAT_ID="$(printf '%s' "$BALE_CHAT_B64" | base64 -d)"
+          BALE_WEBHOOK_SECRET="$(printf '%s' "$BALE_WEBHOOK_B64" | base64 -d)"
+
+          sed -i '/^ZIBAL_MERCHANT=/d;/^BALE_BOT_TOKEN=/d;/^BALE_ADMIN_CHAT_ID=/d;/^BALE_WEBHOOK_SECRET=/d' .env
           printf 'ZIBAL_MERCHANT=%s\n' "$ZIBAL_MERCHANT" >> .env
+          printf 'BALE_BOT_TOKEN=%s\n' "$BALE_BOT_TOKEN" >> .env
+          printf 'BALE_ADMIN_CHAT_ID=%s\n' "$BALE_ADMIN_CHAT_ID" >> .env
+          printf 'BALE_WEBHOOK_SECRET=%s\n' "$BALE_WEBHOOK_SECRET" >> .env
           chmod 600 .env
-          unset ZIBAL_MERCHANT ZIBAL_MERCHANT_B64
+          unset ZIBAL_MERCHANT BALE_BOT_TOKEN BALE_ADMIN_CHAT_ID BALE_WEBHOOK_SECRET ZIBAL_MERCHANT_B64 BALE_TOKEN_B64 BALE_CHAT_B64 BALE_WEBHOOK_B64
 
           docker compose up -d --build --remove-orphans
 
