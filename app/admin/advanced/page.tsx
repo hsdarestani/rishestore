@@ -23,6 +23,8 @@ export default async function AdvancedAdminPage() {
     suppliers,
     purchaseReceipts,
     supplierLedger,
+    accountingAccounts,
+    vouchers,
     treasuryAccounts,
     treasuryProviders,
     treasuryTransactions,
@@ -61,6 +63,8 @@ export default async function AdvancedAdminPage() {
     db.supplier.findMany({ orderBy: { name: "asc" } }),
     db.purchaseReceipt.findMany({ orderBy: { receivedAt: "desc" }, take: 150 }),
     db.supplierLedgerEntry.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
+    db.accountingAccount.findMany({ orderBy: { code: "asc" } }),
+    db.voucher.findMany({ include: { lines: { include: { account: true } } }, orderBy: { date: "desc" }, take: 200 }),
     db.treasuryAccount.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
     db.treasuryProvider.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
     db.treasuryTransaction.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
@@ -89,7 +93,7 @@ export default async function AdvancedAdminPage() {
 
   const data = JSON.parse(JSON.stringify({
     products, orders, customers, warehouses, promotions, channelPrices, loyalty, events, eventSales,
-    purchaseOrders, suppliers, purchaseReceipts, supplierLedger, treasuryAccounts, treasuryProviders,
+    purchaseOrders, suppliers, purchaseReceipts, supplierLedger, accountingAccounts, vouchers, treasuryAccounts, treasuryProviders,
     treasuryTransactions, treasuryMatches, treasurySettlements, b2bAccounts, b2bDispatches, b2bReturns,
     b2bReports, b2bLedger, shipments, tracking, shipmentCosts, taxProfiles, taxInvoices, taxMappings,
     taxEvents, analyticsSources, campaigns, priceHistory, alerts, snapshots, backups, jobs,

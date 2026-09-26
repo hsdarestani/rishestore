@@ -10,6 +10,7 @@ const TABS = [
   ["crm","CRM و بازاریابی"],
   ["events","فروش ایونت"],
   ["procurement","دریافت و تأمین"],
+  ["finance","حسابداری پیشرفته"],
   ["treasury","تطبیق خزانه"],
   ["b2b","B2B و امانی"],
   ["logistics","لجستیک پیشرفته"],
@@ -53,6 +54,20 @@ export default function AdvancedAdminPanel({data}:Props){
     return map;
   },[data.loyalty]);
 
+  const trialBalance=useMemo(()=>{
+    const map=new Map<string,{code:string;name:string;debit:number;credit:number}>();
+    for(const account of data.accountingAccounts||[]) map.set(account.id,{code:account.code,name:account.name,debit:0,credit:0});
+    for(const voucher of data.vouchers||[]){
+      if(voucher.status!=="posted") continue;
+      for(const line of voucher.lines||[]){
+        const row=map.get(line.accountId);
+        if(row){row.debit+=Number(line.debit||0);row.credit+=Number(line.credit||0);}
+      }
+    }
+    return [...map.values()].map(x=>({...x,balance:x.debit-x.credit})).filter(x=>x.debit||x.credit);
+  },[data.accountingAccounts,data.vouchers]);
+
+  const accountOptions=(data.accountingAccounts||[]).map((a:any)=><option key={a.id} value={a.id}>{a.code} · {a.name}</option>);
   const productOptions=(data.products||[]).map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>);
   const warehouseOptions=(data.warehouses||[]).map((w:any)=><option key={w.id} value={w.id}>{w.name}</option>);
   const treasuryOptions=(data.treasuryAccounts||[]).map((x:any)=><option key={x.id} value={x.id}>{x.name}</option>);
@@ -144,6 +159,34 @@ export default function AdvancedAdminPanel({data}:Props){
           </div></Form></Box>
         </div>
         <Box title="رسیدهای خرید">{(data.purchaseReceipts||[]).length?<Table heads={["کد","سفارش","تأمین‌کننده","انبار","اصل خرید","هزینه جانبی","کل","تاریخ"]}>{data.purchaseReceipts.map((x:any)=><tr key={x.id}><td>{x.code}</td><td>{x.purchaseOrderId}</td><td>{x.supplierId}</td><td>{x.warehouseId}</td><td>{toman(x.subtotal)}</td><td>{toman(x.landedCost)}</td><td>{toman(x.total)}</td><td>{d(x.receivedAt)}</td></tr>)}</Table>:<Empty/>}</Box>
+      </div>}
+
+      {tab==="finance"&&<div className="erp-page">
+        <header className="erp-module-header"><div><span>Accounting</span><h1>اسناد، قطعی‌سازی و تراز آزمایشی</h1><p>اسناد پیش‌نویس پیش از قطعی‌شدن کنترل تراز می‌شوند. سند قطعی حذف یا ویرایش نمی‌شود و فقط با سند معکوس برمی‌گردد.</p></div></header>
+        <div className="erp-grid-2">
+          <Box title="ساخت سند دوطرفه">
+            <Form action="voucher.create"><div className="form-grid">
+              <label>حساب بدهکار<select name="debitAccountId" required><option value="">انتخاب</option>{accountOptions}</select></label>
+              <label>حساب بستانکار<select name="creditAccountId" required><option value="">انتخاب</option>{accountOptions}</select></label>
+              <label>مبلغ تومان<input name="amount" type="number" min="1" required/></label>
+              <label>شرح<input name="description"/></label>
+              <input type="hidden" name="status" value="draft"/>
+            </div></Form>
+          </Box>
+          <Box title="قواعد ثبت مالی">
+            <div className="erp-note">پیش‌نویس قابل بررسی است. قطعی‌سازی فقط وقتی انجام می‌شود که بدهکار و بستانکار برابر باشند. برای اصلاح سند قطعی، سیستم سند معکوس جدید می‌سازد و تاریخچه اصلی باقی می‌ماند.</div>
+          </Box>
+        </div>
+        <Box title="اسناد مالی">
+          {(data.vouchers||[]).length?<Table heads={["شماره","شرح","وضعیت","بدهکار","بستانکار","تاریخ","عملیات"]}>
+            {data.vouchers.map((v:any)=><tr key={v.id}><td>{v.code}</td><td>{v.description||"—"}</td><td>{v.status}</td><td>{toman(v.totalDebit)}</td><td>{toman(v.totalCredit)}</td><td>{d(v.date)}</td><td>{v.status!=="posted"?<button className="erp-link-button" onClick={()=>api({action:"voucher.post",id:v.id}).then(()=>location.reload())}>قطعی کن</button>:<button className="erp-link-button" onClick={()=>{const reason=prompt("علت برگشت سند چیست؟")||"";api({action:"voucher.reverse",id:v.id,reason}).then(()=>location.reload())}}>سند معکوس</button>}</td></tr>)}
+          </Table>:<Empty/>}
+        </Box>
+        <Box title="تراز آزمایشی">
+          {trialBalance.length?<Table heads={["کد","حساب","گردش بدهکار","گردش بستانکار","مانده بدهکار","مانده بستانکار"]}>
+            {trialBalance.map((x:any)=><tr key={x.code}><td>{x.code}</td><td>{x.name}</td><td>{toman(x.debit)}</td><td>{toman(x.credit)}</td><td>{x.balance>0?toman(x.balance):"—"}</td><td>{x.balance<0?toman(Math.abs(x.balance)):"—"}</td></tr>)}
+          </Table>:<Empty/>}
+        </Box>
       </div>}
 
       {tab==="treasury"&&<div className="erp-page">

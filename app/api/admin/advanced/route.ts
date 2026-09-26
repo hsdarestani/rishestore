@@ -303,6 +303,47 @@ export async function POST(request: Request) {
         break;
       }
 
+      case "voucher.post": {
+        const id = str(body.id);
+        const voucher = await db.voucher.findUnique({ where: { id }, include: { lines: true } });
+        if (!voucher) throw new Error("NOT_FOUND");
+        if (voucher.status === "posted") { result = voucher; break; }
+        const debit = voucher.lines.reduce((s, x) => s + x.debit, 0);
+        const credit = voucher.lines.reduce((s, x) => s + x.credit, 0);
+        if (debit <= 0 || debit !== credit) return NextResponse.json({ error: "سند تراز نیست؛ جمع بدهکار و بستانکار باید برابر باشد." }, { status: 409 });
+        result = await db.voucher.update({ where: { id }, data: { status: "posted", totalDebit: debit, totalCredit: credit, postedAt: new Date() } });
+        await audit(admin.id, action, "voucher", id, { debit, credit });
+        break;
+      }
+
+      case "voucher.reverse": {
+        const id = str(body.id);
+        const source = await db.voucher.findUnique({ where: { id }, include: { lines: true } });
+        if (!source || source.status !== "posted") return NextResponse.json({ error: "فقط سند قطعی قابل برگشت است." }, { status: 409 });
+        result = await db.voucher.create({
+          data: {
+            code: code("REV"),
+            status: "posted",
+            description: "برگشت سند " + source.code + (str(body.reason) ? " · " + str(body.reason) : ""),
+            sourceType: "voucher_reversal",
+            sourceId: source.id,
+            totalDebit: source.totalCredit,
+            totalCredit: source.totalDebit,
+            postedAt: new Date(),
+            lines: {
+              create: source.lines.map((line) => ({
+                accountId: line.accountId,
+                debit: line.credit,
+                credit: line.debit,
+                description: "برگشت: " + (line.description || source.description || source.code),
+              })),
+            },
+          },
+        });
+        await audit(admin.id, action, "voucher_reversal", result.id, { sourceId: source.id });
+        break;
+      }
+
       case "treasury.provider.create": {
         result = await db.treasuryProvider.create({
           data: { publicId: randomUUID(), code: str(body.code) || code("PRV"), name: str(body.name), adapter: str(body.adapter) || "manual", treasuryAccountId: opt(body.treasuryAccountId), active: true },
