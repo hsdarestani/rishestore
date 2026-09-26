@@ -10,8 +10,8 @@ RUN npm run build
 FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl postgresql-client
 COPY --from=build /app ./
-RUN mkdir -p /app/public/uploads && chmod +x /app/docker-entrypoint.sh
+RUN mkdir -p /app/public/uploads /backups && chmod +x /app/docker-entrypoint.sh
 EXPOSE 3000
 CMD ["sh","/app/docker-entrypoint.sh"]

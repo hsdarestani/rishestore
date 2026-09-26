@@ -200,6 +200,7 @@ export default function AdminPanel({ data, settings }: { data: AdminData; settin
         </button>)}
       </nav>
       <div className="erp-sidebar-bottom">
+        <a href="/admin/advanced">عملیات پیشرفته و ERP کامل →</a>
         <a href="/" target="_blank">مشاهده فروشگاه ↗</a>
         <a href="/account">حساب مدیر</a>
       </div>

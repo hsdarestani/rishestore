@@ -28,9 +28,27 @@ services:
       BALE_BOT_TOKEN: ${BALE_BOT_TOKEN:-}
       BALE_ADMIN_CHAT_ID: ${BALE_ADMIN_CHAT_ID:-}
       BALE_WEBHOOK_SECRET: ${BALE_WEBHOOK_SECRET:-}
+      TAX_SUBMIT_ENDPOINT: ${TAX_SUBMIT_ENDPOINT:-}
+      TAX_API_TOKEN: ${TAX_API_TOKEN:-}
     volumes:
       - uploads:/app/public/uploads
       - brand_assets:/app/public/brand
+      - backups:/backups
+
+  worker:
+    build: .
+    restart: unless-stopped
+    command: ["node","/app/scripts/worker.mjs"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://rishe:${POSTGRES_PASSWORD}@db:5432/rishe?schema=public
+      APP_SECRET: ${APP_SECRET}
+      TAX_SUBMIT_ENDPOINT: ${TAX_SUBMIT_ENDPOINT:-}
+      TAX_API_TOKEN: ${TAX_API_TOKEN:-}
+    volumes:
+      - backups:/backups
 
   caddy:
     image: caddy:2-alpine
@@ -50,5 +68,6 @@ volumes:
   pgdata:
   uploads:
   brand_assets:
+  backups:
   caddy_data:
   caddy_config:

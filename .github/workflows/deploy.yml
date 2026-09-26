@@ -35,6 +35,8 @@ jobs:
           BALE_BOT_TOKEN: ${{ secrets.BALE_BOT_TOKEN }}
           BALE_ADMIN_CHAT_ID: ${{ secrets.BALE_ADMIN_CHAT_ID }}
           BALE_WEBHOOK_SECRET: ${{ secrets.BALE_WEBHOOK_SECRET }}
+          TAX_SUBMIT_ENDPOINT: ${{ secrets.TAX_SUBMIT_ENDPOINT }}
+          TAX_API_TOKEN: ${{ secrets.TAX_API_TOKEN }}
         run: |
           USER_NAME="${SSH_USER:-root}"
           export SSHPASS="$PASS"
@@ -42,7 +44,9 @@ jobs:
           BALE_TOKEN_B64="$(printf '%s' "$BALE_BOT_TOKEN" | base64 -w0)"
           BALE_CHAT_B64="$(printf '%s' "$BALE_ADMIN_CHAT_ID" | base64 -w0)"
           BALE_WEBHOOK_B64="$(printf '%s' "$BALE_WEBHOOK_SECRET" | base64 -w0)"
-          sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 "$USER_NAME@$HOST" "export ZIBAL_MERCHANT_B64='$ZIBAL_B64' BALE_TOKEN_B64='$BALE_TOKEN_B64' BALE_CHAT_B64='$BALE_CHAT_B64' BALE_WEBHOOK_B64='$BALE_WEBHOOK_B64'; bash -s" <<'REMOTE'
+          TAX_ENDPOINT_B64="$(printf '%s' "$TAX_SUBMIT_ENDPOINT" | base64 -w0)"
+          TAX_TOKEN_B64="$(printf '%s' "$TAX_API_TOKEN" | base64 -w0)"
+          sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 "$USER_NAME@$HOST" "export ZIBAL_MERCHANT_B64='$ZIBAL_B64' BALE_TOKEN_B64='$BALE_TOKEN_B64' BALE_CHAT_B64='$BALE_CHAT_B64' BALE_WEBHOOK_B64='$BALE_WEBHOOK_B64' TAX_ENDPOINT_B64='$TAX_ENDPOINT_B64' TAX_TOKEN_B64='$TAX_TOKEN_B64'; bash -s" <<'REMOTE'
           set -euo pipefail
 
           if ! command -v git >/dev/null 2>&1; then
@@ -81,14 +85,18 @@ jobs:
           BALE_BOT_TOKEN="$(printf '%s' "$BALE_TOKEN_B64" | base64 -d)"
           BALE_ADMIN_CHAT_ID="$(printf '%s' "$BALE_CHAT_B64" | base64 -d)"
           BALE_WEBHOOK_SECRET="$(printf '%s' "$BALE_WEBHOOK_B64" | base64 -d)"
+          TAX_SUBMIT_ENDPOINT="$(printf '%s' "$TAX_ENDPOINT_B64" | base64 -d)"
+          TAX_API_TOKEN="$(printf '%s' "$TAX_TOKEN_B64" | base64 -d)"
 
-          sed -i '/^ZIBAL_MERCHANT=/d;/^BALE_BOT_TOKEN=/d;/^BALE_ADMIN_CHAT_ID=/d;/^BALE_WEBHOOK_SECRET=/d' .env
+          sed -i '/^ZIBAL_MERCHANT=/d;/^BALE_BOT_TOKEN=/d;/^BALE_ADMIN_CHAT_ID=/d;/^BALE_WEBHOOK_SECRET=/d;/^TAX_SUBMIT_ENDPOINT=/d;/^TAX_API_TOKEN=/d' .env
           printf 'ZIBAL_MERCHANT=%s\n' "$ZIBAL_MERCHANT" >> .env
           printf 'BALE_BOT_TOKEN=%s\n' "$BALE_BOT_TOKEN" >> .env
           printf 'BALE_ADMIN_CHAT_ID=%s\n' "$BALE_ADMIN_CHAT_ID" >> .env
           printf 'BALE_WEBHOOK_SECRET=%s\n' "$BALE_WEBHOOK_SECRET" >> .env
+          printf 'TAX_SUBMIT_ENDPOINT=%s\n' "$TAX_SUBMIT_ENDPOINT" >> .env
+          printf 'TAX_API_TOKEN=%s\n' "$TAX_API_TOKEN" >> .env
           chmod 600 .env
-          unset ZIBAL_MERCHANT BALE_BOT_TOKEN BALE_ADMIN_CHAT_ID BALE_WEBHOOK_SECRET ZIBAL_MERCHANT_B64 BALE_TOKEN_B64 BALE_CHAT_B64 BALE_WEBHOOK_B64
+          unset ZIBAL_MERCHANT BALE_BOT_TOKEN BALE_ADMIN_CHAT_ID BALE_WEBHOOK_SECRET TAX_SUBMIT_ENDPOINT TAX_API_TOKEN ZIBAL_MERCHANT_B64 BALE_TOKEN_B64 BALE_CHAT_B64 BALE_WEBHOOK_B64 TAX_ENDPOINT_B64 TAX_TOKEN_B64
 
           docker compose up -d --build --remove-orphans
 
@@ -105,7 +113,13 @@ jobs:
           if [ "$HEALTHY" -ne 1 ]; then
             echo "Application health check failed"
             docker compose ps
-            docker compose logs --tail=150 app db caddy
+            docker compose logs --tail=150 app worker db caddy
+            exit 1
+          fi
+
+          if ! docker compose ps worker | grep -q "Up"; then
+            echo "Worker is not running"
+            docker compose logs --tail=150 worker
             exit 1
           fi
 

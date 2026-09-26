@@ -11,6 +11,7 @@ export default async function AdvancedAdminPage() {
 
   const [
     products,
+    orders,
     customers,
     warehouses,
     promotions,
@@ -48,6 +49,7 @@ export default async function AdvancedAdminPage() {
     jobs,
   ] = await Promise.all([
     db.product.findMany({ orderBy: { name: "asc" } }),
+    db.order.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
     db.customer.findMany({ orderBy: { updatedAt: "desc" }, take: 200 }),
     db.warehouse.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
     db.promotion.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
@@ -86,7 +88,7 @@ export default async function AdvancedAdminPage() {
   ]);
 
   const data = JSON.parse(JSON.stringify({
-    products, customers, warehouses, promotions, channelPrices, loyalty, events, eventSales,
+    products, orders, customers, warehouses, promotions, channelPrices, loyalty, events, eventSales,
     purchaseOrders, suppliers, purchaseReceipts, supplierLedger, treasuryAccounts, treasuryProviders,
     treasuryTransactions, treasuryMatches, treasurySettlements, b2bAccounts, b2bDispatches, b2bReturns,
     b2bReports, b2bLedger, shipments, tracking, shipmentCosts, taxProfiles, taxInvoices, taxMappings,
