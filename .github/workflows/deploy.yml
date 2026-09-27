@@ -76,6 +76,19 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
 
+          MIGRATION_PRIVATE="$APP_DIR/.legacy-migration-private.pem"
+          MIGRATION_PUBLIC="$APP_DIR/.legacy-migration-public.pem"
+          if [ ! -f "$MIGRATION_PRIVATE" ]; then
+            umask 077
+            openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -out "$MIGRATION_PRIVATE" >/dev/null 2>&1
+            openssl pkey -in "$MIGRATION_PRIVATE" -pubout -out "$MIGRATION_PUBLIC" >/dev/null 2>&1
+          elif [ ! -f "$MIGRATION_PUBLIC" ]; then
+            openssl pkey -in "$MIGRATION_PRIVATE" -pubout -out "$MIGRATION_PUBLIC" >/dev/null 2>&1
+          fi
+          echo "LEGACY_MIGRATION_PUBLIC_KEY_BEGIN"
+          cat "$MIGRATION_PUBLIC"
+          echo "LEGACY_MIGRATION_PUBLIC_KEY_END"
+
           if [ ! -f .env ]; then
             POSTGRES_PASSWORD="$(openssl rand -hex 20)"
             APP_SECRET="$(openssl rand -hex 32)"
@@ -125,6 +138,18 @@ jobs:
             echo "Worker is not running"
             docker compose logs --tail=150 worker
             exit 1
+          fi
+
+          if [ -f "$APP_DIR/data/legacy-commerce.sql.enc" ] && [ -f "$APP_DIR/data/legacy-commerce.key.enc" ]; then
+            echo "Encrypted legacy commerce payload detected; importing..."
+            rm -f /tmp/legacy-commerce.pass /tmp/legacy-commerce.sql
+            openssl pkeyutl -decrypt               -inkey "$MIGRATION_PRIVATE"               -in "$APP_DIR/data/legacy-commerce.key.enc"               -out /tmp/legacy-commerce.pass               -pkeyopt rsa_padding_mode:oaep               -pkeyopt rsa_oaep_md:sha256
+            openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000               -in "$APP_DIR/data/legacy-commerce.sql.enc"               -out /tmp/legacy-commerce.sql               -pass file:/tmp/legacy-commerce.pass
+            docker compose cp /tmp/legacy-commerce.sql app:/tmp/legacy-commerce.sql
+            docker compose exec -T app npx tsx scripts/import-legacy-commerce.ts /tmp/legacy-commerce.sql
+            docker compose exec -T app rm -f /tmp/legacy-commerce.sql
+            rm -f /tmp/legacy-commerce.pass /tmp/legacy-commerce.sql
+            echo "Encrypted legacy commerce import completed."
           fi
 
           echo "Recreating Caddy after app recreation..."
