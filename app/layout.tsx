@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  let config = { storeName: "ریشه", storePhone: "09910938033", instagramUrl: "", baleUrl: "https://ble.ir/rishe_store" };
+  let config = { storeName: "ریشه", storePhone: "09910938033", instagramUrl: "", baleUrl: "https://ble.ir/rishe_store", warehouseAddress: "کرج، محمدشهر، بلوار دشت بهشت" };
   try { config = await getStoreConfig(); } catch {}
 
   return (
@@ -25,7 +25,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body>
         <CartProvider>
           <MotionController />
-          <SiteChrome storeName={config.storeName} phone={config.storePhone} instagram={config.instagramUrl} bale={config.baleUrl}>
+          <SiteChrome storeName={config.storeName} phone={config.storePhone} instagram={config.instagramUrl} bale={config.baleUrl} warehouseAddress={config.warehouseAddress}>
             {children}
           </SiteChrome>
         </CartProvider>
