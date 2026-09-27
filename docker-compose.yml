@@ -35,6 +35,7 @@ services:
       - uploads:/app/public/uploads
       - brand_assets:/app/public/brand
       - backups:/backups
+      - ./.legacy-migration-private.pem:/run/secrets/legacy-migration-private.pem:ro
 
   worker:
     build: .
