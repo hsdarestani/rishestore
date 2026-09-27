@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { Prisma } from "@prisma/client";
 import { createHash, randomBytes } from "crypto";
 import { db } from "@/lib/db";
 import { normalizePhone, validIranPhone } from "@/lib/money";
@@ -233,8 +234,10 @@ function fullName(first: SqlValue | undefined, last: SqlValue | undefined, fallb
   return [text(first), text(last)].filter(Boolean).join(" ").trim() || fallback;
 }
 
-function objectMetadata(value: unknown) {
-  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+function objectMetadata(value: unknown): Prisma.InputJsonObject {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Prisma.InputJsonObject
+    : {};
 }
 
 export async function importLegacyCommerceSql(sql: string) {
@@ -367,7 +370,7 @@ export async function importLegacyCommerceSql(sql: string) {
     province?: string | null;
     city?: string | null;
     sourceCode?: string;
-    metadata?: Record<string, unknown>;
+    metadata?: Prisma.InputJsonObject;
     firstPurchase?: Date | null;
     lastPurchase?: Date | null;
   }) {
@@ -384,7 +387,7 @@ export async function importLegacyCommerceSql(sql: string) {
           province: input.province || null,
           city: input.city || null,
           sourceCode: input.sourceCode || "legacy",
-          metadata: input.metadata || {},
+          metadata: (input.metadata || {}) as Prisma.InputJsonValue,
           firstPurchase: input.firstPurchase || null,
           lastPurchase: input.lastPurchase || null,
         },
@@ -401,7 +404,7 @@ export async function importLegacyCommerceSql(sql: string) {
           province: current.province || input.province || null,
           city: current.city || input.city || null,
           sourceCode: current.sourceCode || input.sourceCode || "legacy",
-          metadata,
+          metadata: metadata as Prisma.InputJsonValue,
           firstPurchase: current.firstPurchase && input.firstPurchase
             ? new Date(Math.min(current.firstPurchase.getTime(), input.firstPurchase.getTime()))
             : current.firstPurchase || input.firstPurchase || null,
