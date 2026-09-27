@@ -14,6 +14,8 @@ export async function PATCH(request: Request) {
       setSetting("storeName", String(body.storeName || "ریشه").trim()),
       setSetting("storePhone", String(body.storePhone || "").trim()),
       setSetting("instagramUrl", String(body.instagramUrl || "").trim()),
+      setSetting("baleUrl", String(body.baleUrl || "").trim()),
+      setSetting("warehouseAddress", String(body.warehouseAddress || "").trim()),
       setSetting("shippingFlatRate", String(flat)),
       setSetting("freeShippingThreshold", String(threshold)),
     ]);
