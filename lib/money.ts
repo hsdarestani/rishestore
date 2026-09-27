@@ -13,9 +13,13 @@ export function normalizeDigits(value: string) {
 }
 
 export function normalizePhone(value: string) {
-  let phone = normalizeDigits(value).replace(/\s|-/g, "");
+  let phone = normalizeDigits(value).trim();
+  if (phone.startsWith("rishe_")) phone = phone.slice(6);
+  phone = phone.replace(/[^0-9+]/g, "");
   if (phone.startsWith("+98")) phone = "0" + phone.slice(3);
-  if (phone.startsWith("0098")) phone = "0" + phone.slice(4);
+  else if (phone.startsWith("0098")) phone = "0" + phone.slice(4);
+  else if (phone.startsWith("98") && phone.length === 12) phone = "0" + phone.slice(2);
+  else if (phone.startsWith("9") && phone.length === 10) phone = "0" + phone;
   return phone;
 }
 
