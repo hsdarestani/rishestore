@@ -30,6 +30,7 @@ services:
       BALE_WEBHOOK_SECRET: ${BALE_WEBHOOK_SECRET:-}
       TAX_SUBMIT_ENDPOINT: ${TAX_SUBMIT_ENDPOINT:-}
       TAX_API_TOKEN: ${TAX_API_TOKEN:-}
+      SMSIR_API: ${SMSIR_API:-}
     volumes:
       - uploads:/app/public/uploads
       - brand_assets:/app/public/brand
