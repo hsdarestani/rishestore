@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 echo "Applying database schema..."
-npx prisma db push
+npx prisma db push --accept-data-loss
 echo "Seeding idempotent base content and legacy prices..."
 npx prisma db seed
 echo "Preparing Rishe brand and product assets..."
