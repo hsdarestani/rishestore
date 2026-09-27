@@ -31,6 +31,14 @@ const legacyMap: Record<string, { slug: string; category: string }> = {
   "424": { slug: "wheat-flakes", category: "grains-seasonings" },
 };
 
+const legacyImageOverrides: Record<string, string> = {
+  "147": "https://rishe.store/wp-content/uploads/2026/04/IMG_20260427_193354-300x300.jpg",
+  "249": "https://rishe.store/wp-content/uploads/2026/05/ذرت-1-300x300.png",
+  "422": "https://rishe.store/wp-content/uploads/2026/05/نعنا-خشک-1-1-600x600.png",
+  "423": "https://rishe.store/wp-content/uploads/2026/05/پرک-گندم-1-1-600x600.png",
+  "424": "https://rishe.store/wp-content/uploads/2026/05/پرک-جو-1-1-600x600.png",
+};
+
 
 const liveCatalogState: Record<string, { price: number; stock: number; name: string; weightGrams: number }> = {
   "113": { price: 1190000, stock: 233, name: "عسل درجه ۱ محلی", weightGrams: 1000 },
@@ -78,8 +86,9 @@ function legacyData(): Record<string, any> {
 }
 
 function localImage(id: string, url: string) {
-  if (!url) return null;
-  const match = url.match(/\.([a-zA-Z0-9]{2,5})(?:\?|$)/);
+  const source = legacyImageOverrides[id] || url;
+  if (!source) return null;
+  const match = source.match(/\.([a-zA-Z0-9]{2,5})(?:\?|$)/);
   const ext = (match?.[1] || "jpg").toLowerCase();
   return "/brand/products/legacy-" + id + "." + ext;
 }
@@ -245,6 +254,18 @@ async function main() {
       });
     }
     await db.setting.create({ data: { key: "catalogSnapshot20260927ExactV2", value: new Date().toISOString() } });
+  }
+
+  // Repair product image references from the recovered legacy storefront source.
+  const imageCatalogMarker = await db.setting.findUnique({ where: { key: "catalogImages20260927V1" } });
+  if (!imageCatalogMarker) {
+    for (const [legacyId, sourceUrl] of Object.entries(legacyImageOverrides)) {
+      await db.product.updateMany({
+        where: { legacyProductId: Number(legacyId) },
+        data: { image: localImage(legacyId, sourceUrl) },
+      });
+    }
+    await db.setting.create({ data: { key: "catalogImages20260927V1", value: new Date().toISOString() } });
   }
 
   await db.product.updateMany({ where: { slug: "red-lentils", legacyProductId: null }, data: { active: false } }).catch(() => undefined);
