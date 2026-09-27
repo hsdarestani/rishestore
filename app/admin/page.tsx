@@ -45,7 +45,7 @@ export default async function AdminPage() {
   ] = await Promise.all([
     db.product.findMany({ include: { category: true }, orderBy: [{ kind: "asc" }, { updatedAt: "desc" }] }),
     db.category.findMany({ orderBy: { sort: "asc" } }),
-    db.order.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
+    db.order.findMany({ orderBy: { createdAt: "desc" }, take: 500 }),
     db.page.findMany({ orderBy: { title: "asc" } }),
     db.post.findMany({ orderBy: { updatedAt: "desc" } }),
     db.faq.findMany({ orderBy: { sort: "asc" } }),
