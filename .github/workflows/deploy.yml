@@ -123,9 +123,25 @@ jobs:
             exit 1
           fi
 
-          echo "Refreshing Caddy upstream after app recreation..."
-          docker compose restart caddy
+          echo "Recreating Caddy after app recreation..."
+          docker compose up -d --force-recreate --no-deps caddy
           sleep 3
+
+          echo "Checking Caddy to app connectivity..."
+          PROXY_UPSTREAM_OK=0
+          for i in $(seq 1 10); do
+            if docker compose exec -T caddy wget -qO- http://app:3000/api/health 2>/dev/null | grep -q '"ok":true'; then
+              PROXY_UPSTREAM_OK=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$PROXY_UPSTREAM_OK" -ne 1 ]; then
+            echo "Caddy cannot reach app:3000"
+            docker compose ps
+            docker compose logs --tail=120 app caddy
+            exit 1
+          fi
 
           docker image prune -f
           docker compose ps
