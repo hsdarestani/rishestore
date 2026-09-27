@@ -64,7 +64,12 @@ const homepageReviews = [
 
 function legacyData(): Record<string, any> {
   const file = path.join(process.cwd(), "data", "product-content.json.gz");
-  return JSON.parse(gunzipSync(readFileSync(file)).toString("utf8"));
+  try {
+    return JSON.parse(gunzipSync(readFileSync(file)).toString("utf8"));
+  } catch (error) {
+    console.warn("Legacy catalog snapshot could not be read; keeping existing database catalog.", error);
+    return {};
+  }
 }
 
 function localImage(id: string, url: string) {
@@ -197,7 +202,7 @@ async function main() {
     }
   }
 
-  if (!snapshotImported) {
+  if (!snapshotImported && Object.keys(legacy).length > 0) {
     await db.setting.create({ data: { key: "legacyProductSnapshotImported", value: new Date().toISOString() } });
   }
 
