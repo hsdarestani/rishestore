@@ -225,7 +225,7 @@ async function main() {
 
   // Reconcile the exact public catalog supplied for the standalone rebuild.
   // This marker intentionally runs once on existing production databases too.
-  const exactCatalogMarker = await db.setting.findUnique({ where: { key: "catalogSnapshot20260927Exact" } });
+  const exactCatalogMarker = await db.setting.findUnique({ where: { key: "catalogSnapshot20260927ExactV2" } });
   if (!exactCatalogMarker) {
     for (const [legacyId, state] of Object.entries(liveCatalogState)) {
       await db.product.updateMany({
@@ -239,7 +239,7 @@ async function main() {
         },
       });
     }
-    await db.setting.create({ data: { key: "catalogSnapshot20260927Exact", value: new Date().toISOString() } });
+    await db.setting.create({ data: { key: "catalogSnapshot20260927ExactV2", value: new Date().toISOString() } });
   }
 
   await db.product.updateMany({ where: { slug: "red-lentils", legacyProductId: null }, data: { active: false } }).catch(() => undefined);
