@@ -123,7 +123,28 @@ jobs:
             exit 1
           fi
 
+          echo "Refreshing Caddy upstream after app recreation..."
+          docker compose restart caddy
+          sleep 3
+
           docker image prune -f
           docker compose ps
-          echo "Rishe Store health check passed."
+          echo "Rishe Store internal health check passed."
           REMOTE
+
+      - name: Verify public site
+        run: |
+          HEALTHY=0
+          for i in $(seq 1 20); do
+            if curl -fsS --max-time 10 https://new.rishe.store/api/health | grep -q '"ok":true'; then
+              HEALTHY=1
+              break
+            fi
+            sleep 3
+          done
+          if [ "$HEALTHY" -ne 1 ]; then
+            echo "Public health check failed"
+            curl -vk --max-time 10 https://new.rishe.store/api/health || true
+            exit 1
+          fi
+          echo "Rishe Store public health check passed."
