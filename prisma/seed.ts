@@ -63,12 +63,17 @@ const homepageReviews = [
 ] as const;
 
 function legacyData(): Record<string, any> {
-  const file = path.join(process.cwd(), "data", "product-content.json.gz");
+  const jsonFile = path.join(process.cwd(), "data", "product-content.json");
+  const gzipFile = path.join(process.cwd(), "data", "product-content.json.gz");
   try {
-    return JSON.parse(gunzipSync(readFileSync(file)).toString("utf8"));
-  } catch (error) {
-    console.warn("Legacy catalog snapshot could not be read; keeping existing database catalog.", error);
-    return {};
+    return JSON.parse(readFileSync(jsonFile, "utf8"));
+  } catch {
+    try {
+      return JSON.parse(gunzipSync(readFileSync(gzipFile)).toString("utf8"));
+    } catch (error) {
+      console.warn("Legacy catalog snapshot could not be read; keeping existing database catalog.", error);
+      return {};
+    }
   }
 }
 
