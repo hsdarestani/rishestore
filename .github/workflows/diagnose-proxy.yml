@@ -1,0 +1,42 @@
+name: Diagnose Rishe Proxy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/diagnose-proxy.yml"
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install SSH helper
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Inspect production proxy
+        env:
+          HOST: ${{ secrets.HOST }}
+          PASS: ${{ secrets.PASS }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          USER_NAME="${SSH_USER:-root}"
+          export SSHPASS="$PASS"
+          sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 "$USER_NAME@$HOST" 'bash -s' <<'REMOTE'
+          set -u
+          cd /opt/rishestore
+          echo "=== compose ps ==="
+          docker compose ps
+          echo "=== container IPs ==="
+          docker inspect -f 'app={{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' rishestore-app-1 || true
+          docker inspect -f 'caddy={{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' rishestore-caddy-1 || true
+          echo "=== Caddyfile ==="
+          docker compose exec -T caddy cat /etc/caddy/Caddyfile || true
+          echo "=== validate Caddyfile ==="
+          docker compose exec -T caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile || true
+          echo "=== caddy -> app direct ==="
+          docker compose exec -T caddy wget -S -O- http://app:3000/api/health || true
+          echo "=== caddy -> caddy HTTPS self probe ==="
+          docker compose exec -T caddy wget --no-check-certificate --header="Host: new.rishe.store" -S -O- https://127.0.0.1/api/health || true
+          echo "=== recent Caddy/app logs ==="
+          docker compose logs --tail=220 caddy app
+          REMOTE
