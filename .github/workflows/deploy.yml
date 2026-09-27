@@ -143,6 +143,11 @@ jobs:
             exit 1
           fi
 
+          echo "Caddy self probe:"
+          docker compose exec -T caddy wget --no-check-certificate --header="Host: new.rishe.store" -S -O- https://127.0.0.1/api/health || true
+          echo "Caddy logs:"
+          docker compose logs --tail=160 caddy
+
           docker image prune -f
           docker compose ps
           echo "Rishe Store internal health check passed."
