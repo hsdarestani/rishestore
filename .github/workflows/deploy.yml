@@ -140,6 +140,9 @@ jobs:
             exit 1
           fi
 
+          echo "Legacy migration status from application log:"
+          docker compose logs --tail=180 app | grep -E 'LEGACY_ENCRYPTED_IMPORT|LEGACY_IMPORT' || true
+
           if [ -f "$APP_DIR/data/legacy-commerce.sql.enc" ] && [ -f "$APP_DIR/data/legacy-commerce.key.enc" ]; then
             echo "Encrypted legacy commerce payload detected; importing..."
             rm -f /tmp/legacy-commerce.pass /tmp/legacy-commerce.sql
