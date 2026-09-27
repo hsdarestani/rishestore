@@ -47,6 +47,7 @@ export async function getStoreConfig() {
     storePhone: map.storePhone || "09910938033",
     instagramUrl: map.instagramUrl || "",
     baleUrl: map.baleUrl || "https://ble.ir/rishe_store",
+    warehouseAddress: map.warehouseAddress || "کرج، محمدشهر، بلوار دشت بهشت",
     shippingFlatRate: Number.isFinite(shippingFlatRate) ? shippingFlatRate : 0,
     freeShippingThreshold: Number.isFinite(freeShippingThreshold) ? freeShippingThreshold : 0,
     paymentProvider: "zibal",
