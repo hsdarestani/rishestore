@@ -20,6 +20,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       weightGrams: nullableN(body.weightGrams), origin: text(body.origin), usage: text(body.usage),
       shortDescription: String(body.shortDescription || "").trim(), description: String(body.description || "").trim(),
       quality: text(body.quality), guarantee: text(body.guarantee), image: text(body.image),
+      stockStatus: text(body.stockStatus), allowBackorder: Boolean(body.allowBackorder),
+      seoTitle: text(body.seoTitle), seoDescription: text(body.seoDescription),
       active: Boolean(body.active), featured: Boolean(body.featured),
     } });
     return NextResponse.json({ ok: true });
