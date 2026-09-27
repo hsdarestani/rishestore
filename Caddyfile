@@ -1,6 +1,14 @@
 new.rishe.store {
   encode zstd gzip
-  reverse_proxy app:3000
+
+  reverse_proxy {
+    dynamic a app 3000 {
+      refresh 2s
+      resolvers 127.0.0.11
+      versions ipv4
+    }
+  }
+
   header {
     X-Content-Type-Options "nosniff"
     Referrer-Policy "strict-origin-when-cross-origin"
