@@ -61,3 +61,4 @@ Customer login and registration use SMS.ir OTP verification. Production expects 
 
 The admin settings area also accepts a WordPress/WooCommerce SQL export for a one-time, idempotent migration of legacy users, unified customers, addresses, orders, order items and event sales. The importer intentionally ignores legacy password hashes and plugin secrets and does not store the SQL dump in Git.
 Legacy commerce migration is performed from an encrypted one-time payload and is idempotent.
+Storefront and ERP readability use a shared minimum-size baseline for operational text.
