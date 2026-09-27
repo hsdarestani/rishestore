@@ -29,8 +29,13 @@ await fetchFile("https://rishe.store/wp-content/uploads/2026/08/daneshbd.ttf", p
 await fetchFile("https://rishe.store/wp-content/uploads/2026/08/SD-Golpayegani-Bold.ttf", path.join(out, "fonts", "golpayegani-bold.ttf"));
 await fetchFile("https://rishe.store/wp-content/uploads/2026/08/SD-Golpayegani-Grunge.ttf", path.join(out, "fonts", "golpayegani-grunge.ttf"));
 
-const raw = gunzipSync(await readFile(path.join(process.cwd(), "data", "product-content.json.gz"))).toString("utf8");
-const data = JSON.parse(raw);
+let data;
+try {
+  data = JSON.parse(await readFile(path.join(process.cwd(), "data", "product-content.json"), "utf8"));
+} catch {
+  const raw = gunzipSync(await readFile(path.join(process.cwd(), "data", "product-content.json.gz"))).toString("utf8");
+  data = JSON.parse(raw);
+}
 for (const [id, item] of Object.entries(data)) {
   const url = item?.hero?.image_url || "";
   if (!url) continue;
