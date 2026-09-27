@@ -32,22 +32,22 @@ const legacyMap: Record<string, { slug: string; category: string }> = {
 };
 
 
-const liveCatalogState: Record<string, { price: number; stock: number; name: string }> = {
-  "113": { price: 1190000, stock: 233, name: "عسل طبیعی زاگرس" },
-  "124": { price: 349000, stock: 228, name: "نخود ۲خان دست‌چین" },
-  "139": { price: 510000, stock: 208, name: "لوبیا چیتی زنجان" },
-  "147": { price: 298000, stock: 0, name: "عدس درشت مجلسی" },
-  "210": { price: 500000, stock: 211, name: "برنج هاشمی درجه ۱" },
-  "228": { price: 309000, stock: 211, name: "عدس ریز دست‌چین" },
-  "249": { price: 363000, stock: 221, name: "ذرت پاپکورن خام" },
-  "251": { price: 273000, stock: 203, name: "چای ممتاز گیلان" },
-  "255": { price: 369000, stock: 202, name: "لوبیا قرمز دست‌چین" },
-  "256": { price: 359000, stock: 207, name: "لپه آذرشهر ممتاز" },
-  "258": { price: 220000, stock: 202, name: "باقالی درجه ۱ ممتاز" },
-  "421": { price: 132000, stock: 203, name: "چای چوبدار گیلان" },
-  "422": { price: 135000, stock: 215, name: "نعنا خشک" },
-  "423": { price: 79000, stock: 219, name: "پرک جو" },
-  "424": { price: 69000, stock: 700, name: "پرک گندم" },
+const liveCatalogState: Record<string, { price: number; stock: number; name: string; weightGrams: number }> = {
+  "113": { price: 1190000, stock: 233, name: "عسل درجه ۱ محلی", weightGrams: 1000 },
+  "124": { price: 349000, stock: 228, name: "نخود درشت ۲ خان کرمانشاهی (به شرط پخت)", weightGrams: 900 },
+  "139": { price: 510000, stock: 208, name: "لوبیا چیتی درجه ۱ زنجان (به شرط پخت)", weightGrams: 900 },
+  "147": { price: 298000, stock: 0, name: "عدس درجه ۱ محلی درشت (به شرط پخت)", weightGrams: 900 },
+  "210": { price: 500000, stock: 211, name: "برنج هاشمی اصل یکدست (به شرط پخت)", weightGrams: 1000 },
+  "228": { price: 309000, stock: 211, name: "عدس درجه ۱ محلی ریز (به شرط پخت)", weightGrams: 900 },
+  "249": { price: 363000, stock: 221, name: "ذرت پاپکورن (به شرط پخت)", weightGrams: 900 },
+  "251": { price: 273000, stock: 203, name: "چای گیلان (به شرط دم)", weightGrams: 250 },
+  "255": { price: 369000, stock: 202, name: "لوبیا قرمز (به شرط پخت)", weightGrams: 900 },
+  "256": { price: 359000, stock: 207, name: "لپه آذرشهر (به شرط پخت)", weightGrams: 900 },
+  "258": { price: 220000, stock: 202, name: "باقالی ممتاز (به شرط پخت)", weightGrams: 900 },
+  "421": { price: 132000, stock: 203, name: "چای چوبدار گیلان (به شرط دم)", weightGrams: 250 },
+  "422": { price: 135000, stock: 215, name: "نعنا خشک", weightGrams: 75 },
+  "423": { price: 79000, stock: 219, name: "پرک جو", weightGrams: 250 },
+  "424": { price: 69000, stock: 700, name: "پرک گندم", weightGrams: 250 },
 };
 
 const homepageReviews = [
@@ -215,11 +215,31 @@ async function main() {
           name: state.name,
           price: state.price,
           stock: state.stock,
+          weightGrams: state.weightGrams,
           stockStatus: state.stock > 0 ? "instock" : "outofstock",
         },
       });
     }
     await db.setting.create({ data: { key: "catalogSnapshot20260926", value: new Date().toISOString() } });
+  }
+
+  // Reconcile the exact public catalog supplied for the standalone rebuild.
+  // This marker intentionally runs once on existing production databases too.
+  const exactCatalogMarker = await db.setting.findUnique({ where: { key: "catalogSnapshot20260927Exact" } });
+  if (!exactCatalogMarker) {
+    for (const [legacyId, state] of Object.entries(liveCatalogState)) {
+      await db.product.updateMany({
+        where: { legacyProductId: Number(legacyId) },
+        data: {
+          name: state.name,
+          price: state.price,
+          stock: state.stock,
+          weightGrams: state.weightGrams,
+          stockStatus: state.stock > 0 ? "instock" : "outofstock",
+        },
+      });
+    }
+    await db.setting.create({ data: { key: "catalogSnapshot20260927Exact", value: new Date().toISOString() } });
   }
 
   await db.product.updateMany({ where: { slug: "red-lentils", legacyProductId: null }, data: { active: false } }).catch(() => undefined);
