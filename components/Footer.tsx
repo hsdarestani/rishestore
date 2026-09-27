@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function Footer({ phone, instagram, bale }: { phone?: string; instagram?: string; bale?: string }) {
+export default function Footer({ phone, instagram, bale, warehouseAddress }: { phone?: string; instagram?: string; bale?: string; warehouseAddress?: string }) {
   return (
     <footer className="site-footer">
       <div className="container footer-grid">
@@ -35,7 +35,7 @@ export default function Footer({ phone, instagram, bale }: { phone?: string; ins
           {phone && <a href={"tel:" + phone}>{phone}</a>}
           {bale && <a href={bale} target="_blank" rel="noreferrer">پیام‌رسان بله</a>}
           {instagram && <a href={instagram} target="_blank" rel="noreferrer">اینستاگرام</a>}
-          <p className="footer-address">آدرس انبار:<br/>کرج، محمدشهر، بلوار دشت بهشت</p>
+          {warehouseAddress && <p className="footer-address">آدرس انبار:<br/>{warehouseAddress}</p>}
           <a className="enamad" target="_blank" rel="noopener noreferrer" href="https://trustseal.enamad.ir/?id=718940&Code=HnYtqBsGorK2EiyzF4qalMLSKNHgTRfn">
             <img src="https://trustseal.enamad.ir/logo.aspx?id=718940&Code=HnYtqBsGorK2EiyzF4qalMLSKNHgTRfn" alt="نماد اعتماد الکترونیکی فروشگاه ریشه" />
             <span>نماد اعتماد الکترونیکی</span>
@@ -44,7 +44,7 @@ export default function Footer({ phone, instagram, bale }: { phone?: string; ins
       </div>
 
       <div className="container footer-bottom">
-        <span>تمامی حقوق این وب‌سایت متعلق به فروشگاه <strong>ریشه</strong> است.</span>
+        <span>© ۲۰۲۶ تمامی حقوق این وب‌سایت متعلق به فروشگاه <strong>ریشه</strong> است.</span>
         <span>کیفیت، به شرط پخت</span>
       </div>
     </footer>
