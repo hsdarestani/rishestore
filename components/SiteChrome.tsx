@@ -11,12 +11,14 @@ export default function SiteChrome({
   phone,
   instagram,
   bale,
+  warehouseAddress,
 }: {
   children: React.ReactNode;
   storeName: string;
   phone?: string;
   instagram?: string;
   bale?: string;
+  warehouseAddress?: string;
 }) {
   const pathname = usePathname();
   const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
@@ -26,7 +28,7 @@ export default function SiteChrome({
   return <>
     <Header storeName={storeName} />
     <main>{children}</main>
-    <Footer phone={phone} instagram={instagram} bale={bale} />
+    <Footer phone={phone} instagram={instagram} bale={bale} warehouseAddress={warehouseAddress} />
     <SupportChat />
   </>;
 }
