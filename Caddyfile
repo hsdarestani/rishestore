@@ -1,3 +1,7 @@
+{
+  debug
+}
+
 new.rishe.store {
   encode zstd gzip
 
