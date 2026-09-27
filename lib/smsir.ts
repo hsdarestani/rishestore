@@ -64,11 +64,17 @@ export async function sendOtp(phone: string) {
   });
 
   const payload: any = await response.json().catch(() => ({}));
-  const success = response.ok && (payload?.status === 1 || payload?.data?.messageId || payload?.data?.messageIds);
+  const smsStatus = Number(payload?.status || 0);
+  if (smsStatus === 115) {
+    throw new Error("SMSIR_BLACKLIST");
+  }
+  const success = response.ok && (smsStatus === 1 || payload?.data?.messageId || payload?.data?.messageIds);
   if (!success) {
-    console.error("SMS.ir OTP failed", { status: response.status, smsStatus: payload?.status, message: payload?.message });
+    console.error("SMS.ir OTP failed", { status: response.status, smsStatus, message: payload?.message });
     throw new Error("SMSIR_SEND_FAILED");
   }
+
+  const messageId = Number(payload?.data?.messageId || payload?.data?.messageIds?.[0] || 0) || null;
 
   await db.authOtp.create({
     data: {
@@ -78,7 +84,11 @@ export async function sendOtp(phone: string) {
     },
   });
 
-  return { expiresIn: Math.round(OTP_TTL_MS / 1000), resendAfter: Math.round(RESEND_DELAY_MS / 1000) };
+  return {
+    expiresIn: Math.round(OTP_TTL_MS / 1000),
+    resendAfter: Math.round(RESEND_DELAY_MS / 1000),
+    messageId,
+  };
 }
 
 export async function verifyOtp(phone: string, code: string) {
