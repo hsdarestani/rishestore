@@ -54,22 +54,46 @@ export default function MotionController() {
       });
     };
 
+    const show = (node: Element) => {
+      if (!(node instanceof HTMLElement)) return;
+      node.classList.remove("motion-pending");
+      node.classList.add("motion-visible");
+    };
+
+    const observer = typeof IntersectionObserver !== "undefined"
+      ? new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              show(entry.target);
+              observer?.unobserve(entry.target);
+            }
+          }
+        }, { rootMargin: "0px 0px -7% 0px", threshold: 0.08 })
+      : null;
+
     const reveal = (node: Element, index = 0) => {
       if (!(node instanceof HTMLElement) || node.dataset.motionBound === "1") return;
       node.dataset.motionBound = "1";
       node.classList.add("motion-reveal");
       node.style.setProperty("--reveal-delay", Math.min(index % 6, 5) * 70 + "ms");
+
+      // Never leave content hidden when motion support is unavailable.
+      if (!observer) {
+        show(node);
+        return;
+      }
+
+      node.classList.add("motion-pending");
+
+      // Above-the-fold content should be revealed immediately after binding.
+      const rect = node.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.98 && rect.bottom > 0) {
+        requestAnimationFrame(() => show(node));
+        return;
+      }
+
       observer.observe(node);
     };
-
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("motion-visible");
-          observer.unobserve(entry.target);
-        }
-      }
-    }, { rootMargin: "0px 0px -7% 0px", threshold: 0.08 });
 
     const bind = (scope: ParentNode = document) => {
       scope.querySelectorAll(REVEAL_SELECTOR).forEach((node, index) => reveal(node, index));
@@ -88,16 +112,30 @@ export default function MotionController() {
     });
     mutation.observe(document.body, { subtree: true, childList: true });
 
+    // Safety net: a reveal animation must never make real content disappear permanently.
+    const revealFallback = window.setTimeout(() => {
+      document.querySelectorAll(".motion-reveal.motion-pending").forEach(show);
+    }, 1200);
+
     window.addEventListener("scroll", updateScroll, { passive: true });
     window.addEventListener("resize", updateScroll);
     updateScroll();
 
     return () => {
       mutation.disconnect();
-      observer.disconnect();
+      observer?.disconnect();
+      window.clearTimeout(revealFallback);
       window.removeEventListener("scroll", updateScroll);
       window.removeEventListener("resize", updateScroll);
       cancelAnimationFrame(raf);
+
+      // Route changes can reuse DOM nodes in Next.js. Reset stale bindings and
+      // force them visible before the next route binds its own observer.
+      document.querySelectorAll<HTMLElement>('[data-motion-bound="1"]').forEach((node) => {
+        node.classList.remove("motion-pending");
+        node.classList.add("motion-visible");
+        delete node.dataset.motionBound;
+      });
     };
   }, [pathname]);
 
