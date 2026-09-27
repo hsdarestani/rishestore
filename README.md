@@ -53,3 +53,10 @@ DNS دامنه `new.rishe.store` باید مستقیماً به سرور اشا�
 ## Event POS
 
 مدیر می‌تواند برای هر ایونت دستگاه POS مستقل با Token یک‌بارنمایش ایجاد کند. دستگاه بعد از ورود Session امن دریافت می‌کند. فروش‌های ثبت‌شده در زمان قطع اینترنت روی دستگاه در صف محلی باقی می‌مانند و پس از اتصال با Client UUID یکتا Sync می‌شوند تا فروش تکراری ثبت نشود.
+
+
+## SMS login and legacy commerce migration
+
+Customer login and registration use SMS.ir OTP verification. Production expects the `SMSIR_API` GitHub Actions secret and uses verified template `103808` with the `Code` parameter.
+
+The admin settings area also accepts a WordPress/WooCommerce SQL export for a one-time, idempotent migration of legacy users, unified customers, addresses, orders, order items and event sales. The importer intentionally ignores legacy password hashes and plugin secrets and does not store the SQL dump in Git.
