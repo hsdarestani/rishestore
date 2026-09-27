@@ -28,7 +28,7 @@ const NAV = [
   ["analytics", "گزارش‌های مدیریتی", "◒"],
   ["operations", "مرکز عملیات", "⚙"],
   ["products", "محصولات فروشگاه", "□"],
-  ["orders", "سفارش‌های سایت", "≡"],
+  ["orders", "سفارش‌ها", "≡"],
   ["content", "محتوا و مجله", "✎"],
   ["settings", "تنظیمات", "⋯"],
 ] as const;
@@ -178,6 +178,8 @@ export default function AdminPanel({ data, settings }: { data: AdminData; settin
   const [notice, setNotice] = useState("");
 
   const paidOrders = useMemo(() => (data.orders || []).filter((o: any) => o.paymentStatus === "PAID"), [data.orders]);
+  const websitePaidOrders = useMemo(() => paidOrders.filter((o: any) => o.salesChannel !== "event"), [paidOrders]);
+  const eventPaidOrders = useMemo(() => paidOrders.filter((o: any) => o.salesChannel === "event"), [paidOrders]);
   const salesTotal = useMemo(() => paidOrders.reduce((sum: number, o: any) => sum + Number(o.total || 0), 0) + (data.manualSales || []).reduce((sum: number, s: any) => sum + Number(s.total || 0), 0), [paidOrders, data.manualSales]);
   const lowStock = useMemo(() => (data.products || []).filter((p: any) => p.active && p.stock <= 5), [data.products]);
 
@@ -295,8 +297,8 @@ export default function AdminPanel({ data, settings }: { data: AdminData; settin
       {tab === "sales" && <div className="erp-page">
         <ModuleHeader kicker="همه کانال‌ها" title="فروش و بازاریابی" text="فروش سایت، ایونت و فروش حضوری همراه با دیتابیس مشتری و گزارش یکپارچه." />
         <div className="erp-metrics-grid">
-          <Metric label="فروش سایت" value={toman(paidOrders.reduce((s:number,o:any)=>s+o.total,0))} />
-          <Metric label="فروش حضوری" value={toman((data.manualSales||[]).reduce((s:number,o:any)=>s+o.total,0))} />
+          <Metric label="فروش سایت" value={toman(websitePaidOrders.reduce((s:number,o:any)=>s+o.total,0))} />
+          <Metric label="فروش ایونت و حضوری" value={toman(eventPaidOrders.reduce((s:number,o:any)=>s+o.total,0) + (data.manualSales||[]).reduce((s:number,o:any)=>s+o.total,0))} />
           <Metric label="مشتری ثبت‌شده" value={fa((data.customers||[]).length)} />
           <Metric label="تعداد سفارش" value={fa((data.orders||[]).length + (data.manualSales||[]).length)} />
         </div>
@@ -310,7 +312,7 @@ export default function AdminPanel({ data, settings }: { data: AdminData; settin
         </div>
         <Panel title="فروش همه کانال‌ها" wide>
           <Table heads={["مرجع","کانال","مشتری","وضعیت","مبلغ","تاریخ"]}>
-            {(data.orders||[]).slice(0,30).map((o:any)=><tr key={"o"+o.id}><td>{o.code}</td><td>وب‌سایت</td><td>{o.customerName}</td><td>{statusLabel(o.paymentStatus)}</td><td>{toman(o.total)}</td><td>{date(o.createdAt)}</td></tr>)}
+            {(data.orders||[]).slice(0,30).map((o:any)=><tr key={"o"+o.id}><td>{o.code}</td><td>{o.salesChannel === "event" ? "ایونت" : o.salesChannel === "phone" ? "تلفنی" : "وب‌سایت"}</td><td>{o.customerName}</td><td>{statusLabel(o.paymentStatus)}</td><td>{toman(o.total)}</td><td>{date(o.createdAt)}</td></tr>)}
             {(data.manualSales||[]).slice(0,30).map((o:any)=><tr key={"m"+o.id}><td>{o.code}</td><td>{o.channel}</td><td>{o.customerName || "حضوری"}</td><td>{statusLabel(o.status)}</td><td>{toman(o.total)}</td><td>{date(o.createdAt)}</td></tr>)}
           </Table>
         </Panel>
