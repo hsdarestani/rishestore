@@ -424,10 +424,10 @@ export default function AdminPanel({ data, settings }: { data: AdminData; settin
       </div>}
 
       {tab === "orders" && <div className="erp-page">
-        <ModuleHeader kicker="فروش آنلاین" title="سفارش‌های سایت" text="پرداخت، مشتری، وضعیت پردازش و آماده‌سازی سفارش‌های فروشگاه." />
+        <ModuleHeader kicker="همه کانال‌ها" title="سفارش‌ها" text="سفارش‌های سایت و ایونت با مشتری، پرداخت و وضعیت پردازش در یک لیست." />
         <Panel title="سفارش‌ها" wide>
-          <Table heads={["کد","مشتری","موبایل","پرداخت","وضعیت","مبلغ","تاریخ","تغییر وضعیت"]}>
-            {(data.orders||[]).map((o:any)=><tr key={o.id}><td><b>{o.code}</b></td><td>{o.customerName}</td><td>{o.phone}</td><td><span className={"erp-status "+o.paymentStatus.toLowerCase()}>{statusLabel(o.paymentStatus)}</span></td><td>{statusLabel(o.status)}</td><td>{toman(o.total)}</td><td>{date(o.createdAt)}</td><td><select defaultValue={o.status} onChange={(e)=>quick("/api/admin/orders/"+o.id,"PATCH",{status:e.target.value})}><option value="PENDING">در انتظار</option><option value="PROCESSING">پردازش</option><option value="SHIPPED">ارسال</option><option value="COMPLETED">تکمیل</option><option value="CANCELED">لغو</option></select></td></tr>)}
+          <Table heads={["کد","کانال","مشتری","موبایل","پرداخت","وضعیت","مبلغ","تاریخ","تغییر وضعیت"]}>
+            {(data.orders||[]).map((o:any)=><tr key={o.id}><td><b>{o.code}</b></td><td>{o.salesChannel === "event" ? "ایونت" : o.salesChannel === "phone" ? "تلفنی" : "وب‌سایت"}</td><td>{o.customerName}</td><td>{o.phone}</td><td><span className={"erp-status "+o.paymentStatus.toLowerCase()}>{statusLabel(o.paymentStatus)}</span></td><td>{statusLabel(o.status)}</td><td>{toman(o.total)}</td><td>{date(o.createdAt)}</td><td><select defaultValue={o.status} onChange={(e)=>quick("/api/admin/orders/"+o.id,"PATCH",{status:e.target.value})}><option value="PENDING">در انتظار</option><option value="PROCESSING">پردازش</option><option value="SHIPPED">ارسال</option><option value="COMPLETED">تکمیل</option><option value="CANCELED">لغو</option></select></td></tr>)}
           </Table>
         </Panel>
       </div>}
