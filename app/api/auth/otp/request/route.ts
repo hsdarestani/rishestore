@@ -23,6 +23,12 @@ export async function POST(request: Request) {
     if (message === "SMSIR_NOT_CONFIGURED") {
       return NextResponse.json({ error: "سرویس پیامک هنوز روی سرور تنظیم نشده است." }, { status: 503 });
     }
+    if (message === "SMSIR_BLACKLIST") {
+      return NextResponse.json({
+        error: "این شماره در لیست سیاه پیامکی قرار دارد و SMS.ir اجازه ارسال نمی‌دهد. از ورود با رمز عبور استفاده کنید.",
+        blacklist: true,
+      }, { status: 422 });
+    }
     if (message === "SMSIR_SEND_FAILED") {
       return NextResponse.json({ error: "ارسال پیامک انجام نشد. دوباره تلاش کنید." }, { status: 502 });
     }
