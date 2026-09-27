@@ -86,12 +86,16 @@ export default function PosClient({
     if(!current.length)return;
     setSyncMessage("در حال همگام‌سازی فروش‌های آفلاین…");
     const remaining:QueuedSale[]=[];
-    for(const sale of current){
+    for(let i=0;i<current.length;i++){
+      const sale=current[i];
       try{await sendSale({...sale,status:undefined,error:undefined});}
       catch(err){
         const message=err instanceof Error?err.message:"خطای Sync";
         remaining.push({...sale,status:"error",error:message});
-        if(!navigator.onLine)break;
+        if(!navigator.onLine){
+          remaining.push(...current.slice(i+1));
+          break;
+        }
       }
     }
     saveQueue(eventId,remaining);setQueue(remaining);
