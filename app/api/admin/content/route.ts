@@ -10,9 +10,9 @@ export async function PATCH(request: Request) {
     const kind = String(body.kind || "");
     const id = String(body.id || "");
     if (kind === "page") {
-      await db.page.update({ where: { id }, data: { title: String(body.title || "").trim(), kicker: String(body.kicker || "").trim() || null, excerpt: String(body.excerpt || "").trim() || null, content: String(body.content || "").trim() } });
+      await db.page.update({ where: { id }, data: { title: String(body.title || "").trim(), kicker: String(body.kicker || "").trim() || null, excerpt: String(body.excerpt || "").trim() || null, content: String(body.content || "").trim(), seoTitle: String(body.seoTitle || "").trim() || null, seoDescription: String(body.seoDescription || "").trim() || null } });
     } else if (kind === "post") {
-      await db.post.update({ where: { id }, data: { title: String(body.title || "").trim(), excerpt: String(body.excerpt || "").trim(), content: String(body.content || "").trim(), keywords: String(body.keywords || "").trim() || null, published: Boolean(body.published), healthDisclaimer: Boolean(body.healthDisclaimer) } });
+      await db.post.update({ where: { id }, data: { title: String(body.title || "").trim(), excerpt: String(body.excerpt || "").trim(), content: String(body.content || "").trim(), keywords: String(body.keywords || "").trim() || null, image: String(body.image || "").trim() || null, published: Boolean(body.published), healthDisclaimer: Boolean(body.healthDisclaimer) } });
     } else if (kind === "faq") {
       await db.faq.update({ where: { id }, data: { question: String(body.question || "").trim(), answer: String(body.answer || "").trim(), sort: Math.trunc(Number(body.sort || 0)) } });
     } else {
