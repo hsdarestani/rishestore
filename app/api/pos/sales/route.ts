@@ -38,8 +38,8 @@ export async function POST(request:Request){
     const duplicate=await db.eventSale.findUnique({where:{clientUuid}});
     if(duplicate)return NextResponse.json({ok:true,duplicate:true,saleId:duplicate.id,total:duplicate.total});
 
-    const normalized=rawItems.slice(0,50).map((x:any)=>({productId:String(x.productId||""),quantity:Math.max(1,Math.min(100,Math.trunc(Number(x.quantity)||1)))})).filter((x:any)=>x.productId);
-    const ids=[...new Set(normalized.map((x:any)=>x.productId))];
+    const normalized:{productId:string;quantity:number}[]=rawItems.slice(0,50).map((x:any)=>({productId:String(x.productId||""),quantity:Math.max(1,Math.min(100,Math.trunc(Number(x.quantity)||1)))})).filter((x:{productId:string;quantity:number})=>Boolean(x.productId));
+    const ids:string[]=[...new Set<string>(normalized.map(x=>x.productId))];
     const [products,prices]=await Promise.all([
       db.product.findMany({where:{id:{in:ids},active:true}}),
       db.channelPrice.findMany({where:{productId:{in:ids},channel:"event",active:true},orderBy:{updatedAt:"desc"}}),
