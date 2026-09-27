@@ -9,6 +9,8 @@ type Settings = {
   storeName: string;
   storePhone: string;
   instagramUrl: string;
+  baleUrl: string;
+  warehouseAddress: string;
   shippingFlatRate: number;
   freeShippingThreshold: number;
   paymentReady: boolean;
@@ -119,6 +121,7 @@ function ProductEditor({ product, categories }: { product: any; categories: any[
         image,
         active: fd.get("active") === "on",
         featured: fd.get("featured") === "on",
+        allowBackorder: fd.get("allowBackorder") === "on",
       });
       setStatus("ذخیره شد");
       window.setTimeout(() => location.reload(), 400);
@@ -149,7 +152,9 @@ function ProductEditor({ product, categories }: { product: any; categories: any[
         <label>نوع<select name="kind" defaultValue={product.kind}><option value="PRODUCT">محصول</option><option value="PACK">پک</option></select></label>
         <label>دسته<select name="categoryId" defaultValue={product.categoryId || ""}><option value="">بدون دسته</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
         <label>قیمت تومان<input name="price" type="number" min="0" defaultValue={product.price} /></label>
+        <label>قیمت قبل از تخفیف<input name="compareAt" type="number" min="0" defaultValue={product.compareAt || ""} /></label>
         <label>موجودی کل<input name="stock" type="number" min="0" defaultValue={product.stock} /></label>
+        <label>وضعیت انبار<select name="stockStatus" defaultValue={product.stockStatus || ""}><option value="">خودکار</option><option value="instock">موجود</option><option value="outofstock">ناموجود</option><option value="onbackorder">پیش‌سفارش</option></select></label>
         <label>وزن گرم<input name="weightGrams" type="number" min="0" defaultValue={product.weightGrams || ""} /></label>
         <label>مبدأ<input name="origin" defaultValue={product.origin || ""} /></label>
         <label className="span-2">توضیح کوتاه<textarea name="shortDescription" rows={2} defaultValue={product.shortDescription} /></label>
@@ -159,8 +164,10 @@ function ProductEditor({ product, categories }: { product: any; categories: any[
         <label className="span-2">بارگذاری تصویر<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => upload(e.target.files?.[0])} /></label>
         <label className="span-2">اطلاعات کیفیت<textarea name="quality" rows={3} defaultValue={product.quality || ""} /></label>
         <label className="span-2">تعهد کیفیت / به شرط پخت<textarea name="guarantee" rows={3} defaultValue={product.guarantee || ""} /></label>
+        <label>عنوان SEO<input name="seoTitle" defaultValue={product.seoTitle || ""} /></label>
+        <label>توضیح SEO<input name="seoDescription" defaultValue={product.seoDescription || ""} /></label>
       </div>
-      <div className="erp-checks"><label><input type="checkbox" name="active" defaultChecked={product.active} /> فعال</label><label><input type="checkbox" name="featured" defaultChecked={product.featured} /> ویژه</label></div>
+      <div className="erp-checks"><label><input type="checkbox" name="active" defaultChecked={product.active} /> فعال</label><label><input type="checkbox" name="featured" defaultChecked={product.featured} /> ویژه</label><label><input type="checkbox" name="allowBackorder" defaultChecked={product.allowBackorder} /> پیش‌سفارش مجاز</label></div>
       <div className="erp-form-actions"><button className="btn btn-primary btn-sm">ذخیره</button><small>{status}</small></div>
     </form>
   </details>;
@@ -410,7 +417,7 @@ export default function AdminPanel({ data, settings }: { data: AdminData; settin
 
       {tab === "products" && <div className="erp-page">
         <ModuleHeader kicker="کاتالوگ فروشگاه" title="محصولات و پک‌ها" text="تصویر، قیمت، موجودی، دسته، مبدأ، توضیحات و اطلاعات کیفیت هر محصول." />
-        <details className="erp-record erp-create-record"><summary><strong>+ محصول جدید</strong></summary><form className="erp-record-form" onSubmit={async(e)=>{e.preventDefault();const fd=new FormData(e.currentTarget);await quick("/api/admin/products","POST",{...Object.fromEntries(fd.entries()),active:true,featured:false});}}><div className="form-grid"><label>نام<input name="name" required /></label><label>اسلاگ انگلیسی<input name="slug" required dir="ltr" /></label><label>نوع<select name="kind"><option value="PRODUCT">محصول</option><option value="PACK">پک</option></select></label><label>دسته<select name="categoryId"><option value="">بدون دسته</option>{(data.categories||[]).map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>قیمت<input name="price" type="number" min="0" /></label><label>موجودی<input name="stock" type="number" min="0" /></label><label className="span-2">توضیح کوتاه<textarea name="shortDescription" required /></label><label className="span-2">توضیح کامل<textarea name="description" required /></label></div><button className="btn btn-primary btn-sm">ساخت محصول</button></form></details>
+        <details className="erp-record erp-create-record"><summary><strong>+ محصول جدید</strong></summary><form className="erp-record-form" onSubmit={async(e)=>{e.preventDefault();const fd=new FormData(e.currentTarget);await quick("/api/admin/products","POST",{...Object.fromEntries(fd.entries()),active:true,featured:false});}}><div className="form-grid"><label>نام<input name="name" required /></label><label>اسلاگ انگلیسی<input name="slug" required dir="ltr" /></label><label>نوع<select name="kind"><option value="PRODUCT">محصول</option><option value="PACK">پک</option></select></label><label>دسته<select name="categoryId"><option value="">بدون دسته</option>{(data.categories||[]).map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>قیمت<input name="price" type="number" min="0" /></label><label>قیمت قبل از تخفیف<input name="compareAt" type="number" min="0" /></label><label>موجودی<input name="stock" type="number" min="0" /></label><label>وزن گرم<input name="weightGrams" type="number" min="0" /></label><label className="span-2">توضیح کوتاه<textarea name="shortDescription" required /></label><label className="span-2">توضیح کامل<textarea name="description" required /></label></div><button className="btn btn-primary btn-sm">ساخت محصول</button></form></details>
         {(data.products||[]).map((p:any)=><ProductEditor key={p.id} product={p} categories={data.categories||[]} />)}
       </div>}
 
@@ -438,7 +445,7 @@ export default function AdminPanel({ data, settings }: { data: AdminData; settin
         <div className="erp-grid-2">
           <Panel title="تنظیمات فروشگاه">
             <form className="erp-form" onSubmit={async(e)=>{e.preventDefault();await quick("/api/admin/settings","PATCH",Object.fromEntries(new FormData(e.currentTarget).entries()));}}>
-              <div className="form-grid"><label>نام فروشگاه<input name="storeName" defaultValue={settings.storeName}/></label><label>شماره تماس<input name="storePhone" defaultValue={settings.storePhone}/></label><label className="span-2">اینستاگرام<input name="instagramUrl" defaultValue={settings.instagramUrl} dir="ltr"/></label><label>هزینه ثابت ارسال<input name="shippingFlatRate" type="number" min="0" defaultValue={settings.shippingFlatRate}/></label><label>ارسال رایگان از<input name="freeShippingThreshold" type="number" min="0" defaultValue={settings.freeShippingThreshold}/></label></div>
+              <div className="form-grid"><label>نام فروشگاه<input name="storeName" defaultValue={settings.storeName}/></label><label>شماره تماس<input name="storePhone" defaultValue={settings.storePhone}/></label><label className="span-2">اینستاگرام<input name="instagramUrl" defaultValue={settings.instagramUrl} dir="ltr"/></label><label className="span-2">لینک بله<input name="baleUrl" defaultValue={settings.baleUrl} dir="ltr"/></label><label className="span-2">آدرس انبار<input name="warehouseAddress" defaultValue={settings.warehouseAddress}/></label><label>هزینه ثابت ارسال<input name="shippingFlatRate" type="number" min="0" defaultValue={settings.shippingFlatRate}/></label><label>ارسال رایگان از<input name="freeShippingThreshold" type="number" min="0" defaultValue={settings.freeShippingThreshold}/></label></div>
               <div className="erp-form-actions"><button className="btn btn-primary btn-sm">ذخیره تنظیمات</button></div>
             </form>
           </Panel>
