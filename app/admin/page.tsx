@@ -18,6 +18,7 @@ export default async function AdminPage() {
     posts,
     faqs,
     customers,
+    customerOrderCounts,
     warehouses,
     inventoryBatches,
     inventoryMovements,
@@ -48,7 +49,8 @@ export default async function AdminPage() {
     db.page.findMany({ orderBy: { title: "asc" } }),
     db.post.findMany({ orderBy: { updatedAt: "desc" } }),
     db.faq.findMany({ orderBy: { sort: "asc" } }),
-    db.user.findMany({ where: { role: "CUSTOMER" }, include: { _count: { select: { orders: true } } }, orderBy: { createdAt: "desc" }, take: 150 }),
+    db.customer.findMany({ orderBy: { updatedAt: "desc" }, take: 150 }),
+    db.order.groupBy({ by: ["customerId"], where: { customerId: { not: null } }, _count: { _all: true } }),
     db.warehouse.findMany({ orderBy: { createdAt: "asc" } }),
     db.inventoryBatch.findMany({ include: { warehouse: true, product: true }, orderBy: { receivedAt: "desc" }, take: 300 }),
     db.inventoryMovement.findMany({ include: { warehouse: true, product: true }, orderBy: { createdAt: "desc" }, take: 150 }),
@@ -74,6 +76,13 @@ export default async function AdminPage() {
     getStoreConfig(),
   ]);
 
+  const customerOrderCountMap = new Map(customerOrderCounts.map((row) => [row.customerId, row._count._all]));
+  const mergedCustomers = customers.map((customer) => ({
+    ...customer,
+    phone: customer.mobileNormalized || "",
+    _count: { orders: customerOrderCountMap.get(customer.id) || 0 },
+  }));
+
   const data = JSON.parse(JSON.stringify({
     products,
     categories,
@@ -81,7 +90,7 @@ export default async function AdminPage() {
     pages,
     posts,
     faqs,
-    customers,
+    customers: mergedCustomers,
     warehouses,
     inventoryBatches,
     inventoryMovements,
