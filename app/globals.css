@@ -56,8 +56,8 @@ h1,h2,h3,h4,h5,h6,.main-nav,.btn,.brand strong,.product-body h3,.category-card h
 
 /* Motion system */
 .scroll-progress{position:fixed;top:0;right:0;left:0;height:3px;z-index:9999;background:linear-gradient(90deg,var(--rishe-green),var(--rishe-blue));transform:scaleX(0);transform-origin:right center;pointer-events:none;box-shadow:0 1px 8px rgba(46,49,145,.22)}
-.motion-reveal{opacity:0;transform:translate3d(0,30px,0) scale(.988);filter:blur(4px);transition:opacity .72s cubic-bezier(.2,.75,.2,1),transform .72s cubic-bezier(.2,.75,.2,1),filter .72s ease;transition-delay:var(--reveal-delay,0ms);will-change:opacity,transform}
-.motion-reveal.motion-visible{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}
+.motion-reveal{opacity:1;transform:translate3d(0,0,0) scale(1);filter:none;transition:opacity .72s cubic-bezier(.2,.75,.2,1),transform .72s cubic-bezier(.2,.75,.2,1),filter .72s ease;transition-delay:var(--reveal-delay,0ms);will-change:opacity,transform}
+.motion-ready .motion-reveal.motion-pending{opacity:0;transform:translate3d(0,30px,0) scale(.988);filter:blur(4px)}.motion-reveal.motion-visible{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}
 .motion-route-enter{animation:risheRouteIn .46s cubic-bezier(.2,.75,.2,1) both}
 @keyframes risheRouteIn{from{opacity:.2;transform:translateY(9px)}to{opacity:1;transform:none}}
 .site-header{transition:min-height .28s ease,box-shadow .28s ease,background-color .28s ease,border-color .28s ease}
