@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import ProductCard from "@/components/ProductCard";
+import { ArrowLeftIcon, ShieldIcon, SparklesIcon, TruckIcon } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -33,13 +34,13 @@ export default async function HomePage() {
             <h1>روایتِ اصالت،<br/><em>مستقیم از مزرعه پدری</em></h1>
             <p>ما در «ریشه»، کیفیت را فدای ظاهر نمی‌کنیم. هر محصول پیش از رسیدن به دست شما، در آشپزخانه ما پخته و سنجیده می‌شود تا طعم واقعی و بی‌آلایش محصولات را به سفره بیاورید.</p>
             <div className="hero-actions">
-              <Link className="btn btn-primary" href="/shop">خرید پک‌ها و محصولات پیشنهادی</Link>
-              <Link className="btn btn-ghost" href="/about">روایت دست‌چین‌ها را بخوانید</Link>
+              <Link className="btn btn-primary" href="/shop"><SparklesIcon size={19} />خرید پک‌ها و محصولات پیشنهادی</Link>
+              <Link className="btn btn-ghost" href="/about"><ArrowLeftIcon size={18} />روایت دست‌چین‌ها را بخوانید</Link>
             </div>
             <div className="trust-strip">
-              <span>تضمین کیفیت</span>
-              <span>تست پخت قبل از عرضه</span>
-              <span>ارسال سریع کرج و تهران</span>
+              <span><ShieldIcon size={17} />تضمین کیفیت</span>
+              <span><SparklesIcon size={17} />تست پخت قبل از عرضه</span>
+              <span><TruckIcon size={17} />ارسال سریع کرج و تهران</span>
             </div>
           </div>
 
@@ -119,7 +120,7 @@ export default async function HomePage() {
                   <strong>{product.price > 0 ? product.price.toLocaleString("fa-IR") + " تومان" : "قیمت در حال بروزرسانی"}</strong>
                   {text(hero.myth) && <p className="home-story-myth">{hero.myth}</p>}
                   {text(hero.story) && <p><b>روایت تامین:</b> {hero.story}</p>}
-                  <span className="home-story-buy">مشاهده و خرید ←</span>
+                  <span className="home-story-buy">مشاهده و خرید <ArrowLeftIcon size={17} /></span>
                 </div>
               </Link>;
             })}
