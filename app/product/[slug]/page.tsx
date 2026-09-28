@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { toman } from "@/lib/money";
 import AddToCartButton from "@/components/AddToCartButton";
 import ProductCard from "@/components/ProductCard";
+import { BoxIcon, ScaleIcon, ShieldIcon, TagIcon, TruckIcon } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -87,9 +88,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>}
 
         <div className="buy-box">
-          <div><span>قیمت</span><strong>{product.price > 0 ? toman(product.price) : "در حال به‌روزرسانی"}</strong></div>
-          {product.weightGrams && <div><span>وزن</span><strong>{product.weightGrams.toLocaleString("fa-IR")} گرم</strong></div>}
-          <div><span>موجودی</span><strong>{product.stock > 0 ? product.stock.toLocaleString("fa-IR") + " عدد" : product.allowBackorder ? "پیش‌سفارش" : "ناموجود"}</strong></div>
+          <div className="buy-box-item"><TagIcon size={22} /><div><span>قیمت</span><strong>{product.price > 0 ? toman(product.price) : "در حال به‌روزرسانی"}</strong></div></div>
+          {product.weightGrams && <div className="buy-box-item"><ScaleIcon size={22} /><div><span>وزن</span><strong>{product.weightGrams.toLocaleString("fa-IR")} گرم</strong></div></div>}
+          <div className="buy-box-item"><BoxIcon size={22} /><div><span>موجودی</span><strong>{product.stock > 0 ? product.stock.toLocaleString("fa-IR") + " عدد" : product.allowBackorder ? "پیش‌سفارش" : "ناموجود"}</strong></div></div>
         </div>
 
         <AddToCartButton product={{
@@ -102,7 +103,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           stock: product.stock,
           allowBackorder: product.allowBackorder,
         }} />
-        <div className="micro-trust"><span>قیمت نهایی قبل از پرداخت</span><span>اطلاعات واقعی محصول</span><span>پرداخت امن زیبال</span></div>
+        <div className="micro-trust">
+          <span><TagIcon size={16} />قیمت نهایی قبل از پرداخت</span>
+          <span><ShieldIcon size={16} />اطلاعات واقعی محصول</span>
+          <span><TruckIcon size={16} />ارسال و پرداخت امن</span>
+        </div>
       </div>
     </section>
 
