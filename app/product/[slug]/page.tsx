@@ -69,7 +69,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   return <div className="page-shell container">
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
-    <nav className="breadcrumbs"><Link href="/">خانه</Link><span>/</span><Link href="/shop">فروشگاه</Link>{product.category && <><span>/</span><Link href={"/category/" + product.category.slug}>{product.category.name}</Link></>}</nav>
+    <nav className="breadcrumbs"><Link href="/">خانه</Link><span>/</span><Link href={product.kind === "PACK" ? "/packs" : "/shop"}>{product.kind === "PACK" ? "پک‌ها" : "فروشگاه"}</Link>{product.category && <><span>/</span><Link href={"/category/" + product.category.slug}>{product.category.name}</Link></>}</nav>
 
     <section className="product-page">
       <div className="product-gallery">
@@ -78,7 +78,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       <div className="product-info">
         {text(hero.badge) && <span className="legacy-hero-badge">{hero.badge}</span>}
-        {product.category && <Link className="eyebrow" href={"/category/" + product.category.slug}>{text(hero.breadcrumb) || product.category.name}</Link>}
+        {product.kind === "PACK" && <Link className="eyebrow" href="/packs">پک پیشنهادی ریشه</Link>}{product.category && <Link className="eyebrow" href={"/category/" + product.category.slug}>{text(hero.breadcrumb) || product.category.name}</Link>}
         <h1>{text(hero.display_title) || product.name}</h1>
         <p className="product-myth">{text(hero.myth) || product.shortDescription}</p>
         <p className="lead">{text(hero.story) || product.description}</p>
@@ -88,7 +88,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>}
 
         <div className="buy-box">
-          <div className="buy-box-item"><TagIcon size={22} /><div><span>قیمت</span><strong>{product.price > 0 ? toman(product.price) : "در حال به‌روزرسانی"}</strong></div></div>
+          <div className="buy-box-item"><TagIcon size={22} /><div><span>قیمت</span>{product.compareAt && product.compareAt > product.price && <del className="buy-compare">{toman(product.compareAt)}</del>}<strong>{product.price > 0 ? toman(product.price) : "در حال به‌روزرسانی"}</strong></div></div>
           {product.weightGrams && <div className="buy-box-item"><ScaleIcon size={22} /><div><span>وزن</span><strong>{product.weightGrams.toLocaleString("fa-IR")} گرم</strong></div></div>}
           <div className="buy-box-item"><BoxIcon size={22} /><div><span>موجودی</span><strong>{product.stock > 0 ? product.stock.toLocaleString("fa-IR") + " عدد" : product.allowBackorder ? "پیش‌سفارش" : "ناموجود"}</strong></div></div>
         </div>

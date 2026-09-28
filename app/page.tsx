@@ -17,7 +17,7 @@ export default async function HomePage() {
       include: { category: true },
       orderBy: [{ legacyProductId: "asc" }, { updatedAt: "desc" }],
     }),
-    db.product.findMany({ where: { active: true, kind: "PACK" }, include: { category: true }, take: 3 }),
+    db.product.findMany({ where: { active: true, kind: "PACK" }, include: { category: true }, orderBy: [{ featured: "desc" }, { updatedAt: "desc" }], take: 6 }),
     db.post.findMany({ where: { published: true }, orderBy: { updatedAt: "desc" }, take: 6 }),
     db.review.findMany({ where: { approved: true }, orderBy: { createdAt: "asc" }, take: 9 }),
   ]);

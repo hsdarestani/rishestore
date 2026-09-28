@@ -58,6 +58,75 @@ const liveCatalogState: Record<string, { price: number; stock: number; name: str
   "424": { price: 69000, stock: 700, name: "پرک گندم", weightGrams: 250 },
 };
 
+const packCatalog = [
+  {
+    slug: "adas-polo-aroos-haj-khanom",
+    name: "عدس پلوی عروس حاج خانوم",
+    ingredients: "برنج هاشمی درجه ۱ + عدس",
+    description: "ترکیب آماده برای یک عدس پلوی اصیل و خانگی با برنج هاشمی درجه ۱ و عدس ریشه.",
+    price: 728000,
+    compareAt: 809000,
+    stock: 211,
+    weightGrams: 1900,
+    usage: "عدس پلو",
+  },
+  {
+    slug: "gheymeh-khoonegi",
+    name: "قیمه خونگی",
+    ingredients: "برنج هاشمی درجه ۱ + لپه آذرشهر",
+    description: "پک قیمه خونگی با برنج هاشمی درجه ۱ و لپه آذرشهر برای یک وعده ایرانی کامل.",
+    price: 773000,
+    compareAt: 859000,
+    stock: 207,
+    weightGrams: 1900,
+    usage: "قیمه خانگی",
+  },
+  {
+    slug: "chai-asalak",
+    name: "چای عسلیک",
+    ingredients: "چای شمال + عسل طبیعی",
+    description: "چای شمال در کنار عسل طبیعی ریشه برای یک ترکیب ساده و اصیل.",
+    price: 1316000,
+    compareAt: 1463000,
+    stock: 203,
+    weightGrams: 1250,
+    usage: "چای و عسل",
+  },
+  {
+    slug: "khorak-lubia-protein",
+    name: "خوراک لوبیای پروتئینه",
+    ingredients: "لوبیا چیتی زنجان + لوبیا قرمز + نخود ۲ خان",
+    description: "ترکیب سه حبوبات ریشه برای خوراک لوبیای مقوی و پرپروتئین.",
+    price: 1105000,
+    compareAt: 1228000,
+    stock: 202,
+    weightGrams: 2700,
+    usage: "خوراک لوبیا",
+  },
+  {
+    slug: "ash-reshte-khaleh",
+    name: "آش رشته خاله",
+    ingredients: "نخود ۲ خان + لوبیا چیتی زنجان + لوبیا قرمز + عدس + نعنا خشک",
+    description: "همه حبوبات اصلی آش رشته به همراه نعنا خشک در یک پک کامل و آماده.",
+    price: 1504000,
+    compareAt: 1672000,
+    stock: 202,
+    weightGrams: 3675,
+    usage: "آش رشته",
+  },
+  {
+    slug: "sobhaneh-edayi",
+    name: "صبحانه ادایی",
+    ingredients: "عسل طبیعی + چای شمال + جو پرک + گندم پرک",
+    description: "یک پک صبحانه کامل با عسل طبیعی، چای شمال، جو پرک و گندم پرک.",
+    price: 1449000,
+    compareAt: 1611000,
+    stock: 203,
+    weightGrams: 1750,
+    usage: "صبحانه",
+  },
+] as const;
+
 const homepageReviews = [
   ["مریم حسینی", "برنج هاشمی و عدس ریز رو سفارش دادم. عطر برنج موقع پخت کل ساختمون رو برداشت. عدس هم پوستش جدا نشد و عدس‌پلو فوق‌العاده شد."],
   ["علی رضاپور", "نخود ۲خان رو برای رستوران سنتی‌مون تهیه کردیم. پختش عالیه و مشتری‌ها متوجه تغییر کیفیت دیزی‌ها شدن. عیار محصول کاملاً مشخصه."],
@@ -254,6 +323,70 @@ async function main() {
       });
     }
     await db.setting.create({ data: { key: "catalogSnapshot20260927ExactV2", value: new Date().toISOString() } });
+  }
+
+  // Keep the six public bundle offers in sync with the supplied Rishe pack sheet.
+  // Stock is only initialized on first creation so later paid orders or admin edits are not reset by deployments.
+  for (const pack of packCatalog) {
+    const legacyContent = {
+      hero: {
+        badge: "پک پیشنهادی ریشه",
+        display_title: pack.name,
+        myth: pack.ingredients,
+        story: pack.description,
+        badges: ["ترکیب آماده", "قیمت ویژه"],
+      },
+    };
+    const existing = await db.product.findUnique({ where: { slug: pack.slug } });
+    if (!existing) {
+      await db.product.create({
+        data: {
+          slug: pack.slug,
+          name: pack.name,
+          kind: ProductKind.PACK,
+          shortDescription: pack.ingredients,
+          description: pack.description,
+          price: pack.price,
+          compareAt: pack.compareAt,
+          weightGrams: pack.weightGrams,
+          stock: pack.stock,
+          stockStatus: "instock",
+          allowBackorder: false,
+          legacyContent,
+          origin: "ایران",
+          usage: pack.usage,
+          quality: "ترکیب محصولات منتخب ریشه با اطلاعات شفاف و قیمت پک.",
+          guarantee: "کیفیت محصولات داخل پک مطابق تعهد کیفیت ریشه است.",
+          featured: true,
+          active: true,
+          seoTitle: pack.name + " | پک پیشنهادی ریشه",
+          seoDescription: pack.ingredients,
+        },
+      });
+    } else {
+      await db.product.update({
+        where: { id: existing.id },
+        data: {
+          name: pack.name,
+          kind: ProductKind.PACK,
+          shortDescription: pack.ingredients,
+          description: pack.description,
+          price: pack.price,
+          compareAt: pack.compareAt,
+          weightGrams: pack.weightGrams,
+          allowBackorder: false,
+          legacyContent,
+          origin: "ایران",
+          usage: pack.usage,
+          quality: "ترکیب محصولات منتخب ریشه با اطلاعات شفاف و قیمت پک.",
+          guarantee: "کیفیت محصولات داخل پک مطابق تعهد کیفیت ریشه است.",
+          featured: true,
+          active: true,
+          seoTitle: pack.name + " | پک پیشنهادی ریشه",
+          seoDescription: pack.ingredients,
+        },
+      });
+    }
   }
 
   // Repair product image references from the recovered legacy storefront source.

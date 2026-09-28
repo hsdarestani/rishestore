@@ -433,3 +433,16 @@ body{font-size:16px}
   .home-story-card{grid-template-columns:108px 1fr}
   .home-story-copy h3{font-size:24px}
 }
+
+
+/* Bundle pricing */
+.product-price{display:flex;align-items:center;gap:7px;color:#1f2230}
+.product-price>svg{flex:none;color:#6fa42f}
+.product-price>div{display:flex;flex-direction:column;gap:1px}
+.product-price del,.buy-compare{color:#9a9da4;font-size:12px;text-decoration-color:#ec1c24;text-decoration-thickness:2px}
+.product-price strong{font-size:15px;color:#2f3192}
+.pack-fallback{border-radius:28px;display:flex;flex-direction:column;gap:7px;font-size:14px}
+.pack-fallback svg{color:#6fa42f}
+.pack-fallback small{font-size:12px;color:#2f3192;font-weight:900}
+.buy-compare{display:block!important;margin-top:3px}
+@media(max-width:650px){.product-price strong{font-size:17px}.product-price del,.buy-compare{font-size:13px}}
