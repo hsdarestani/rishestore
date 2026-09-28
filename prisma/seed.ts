@@ -45,13 +45,13 @@ const liveCatalogState: Record<string, { price: number; stock: number; name: str
   "124": { price: 349000, stock: 228, name: "نخود درشت ۲ خان کرمانشاهی (به شرط پخت)", weightGrams: 900 },
   "139": { price: 510000, stock: 208, name: "لوبیا چیتی درجه ۱ زنجان (به شرط پخت)", weightGrams: 900 },
   "147": { price: 298000, stock: 0, name: "عدس درجه ۱ محلی درشت (به شرط پخت)", weightGrams: 900 },
-  "210": { price: 500000, stock: 211, name: "برنج هاشمی اصل یکدست (به شرط پخت)", weightGrams: 1000 },
+  "210": { price: 500000, stock: 0, name: "برنج هاشمی اصل یکدست (به شرط پخت)", weightGrams: 1000 },
   "228": { price: 309000, stock: 211, name: "عدس درجه ۱ محلی ریز (به شرط پخت)", weightGrams: 900 },
   "249": { price: 363000, stock: 221, name: "ذرت پاپکورن (به شرط پخت)", weightGrams: 900 },
   "251": { price: 273000, stock: 203, name: "چای گیلان (به شرط دم)", weightGrams: 250 },
   "255": { price: 369000, stock: 202, name: "لوبیا قرمز (به شرط پخت)", weightGrams: 900 },
   "256": { price: 359000, stock: 207, name: "لپه آذرشهر (به شرط پخت)", weightGrams: 900 },
-  "258": { price: 220000, stock: 202, name: "باقالی ممتاز (به شرط پخت)", weightGrams: 900 },
+  "258": { price: 220000, stock: 0, name: "باقالی ممتاز (به شرط پخت)", weightGrams: 900 },
   "421": { price: 132000, stock: 203, name: "چای چوبدار گیلان (به شرط دم)", weightGrams: 250 },
   "422": { price: 135000, stock: 215, name: "نعنا خشک", weightGrams: 75 },
   "423": { price: 79000, stock: 219, name: "پرک جو", weightGrams: 250 },
@@ -66,7 +66,7 @@ const packCatalog = [
     description: "ترکیب آماده برای یک عدس پلوی اصیل و خانگی با برنج هاشمی درجه ۱ و عدس ریشه.",
     price: 728000,
     compareAt: 809000,
-    stock: 211,
+    stock: 0,
     weightGrams: 1900,
     usage: "عدس پلو",
   },
@@ -77,7 +77,7 @@ const packCatalog = [
     description: "پک قیمه خونگی با برنج هاشمی درجه ۱ و لپه آذرشهر برای یک وعده ایرانی کامل.",
     price: 773000,
     compareAt: 859000,
-    stock: 207,
+    stock: 0,
     weightGrams: 1900,
     usage: "قیمه خانگی",
   },
@@ -387,6 +387,24 @@ async function main() {
         },
       });
     }
+  }
+
+
+  // Temporary availability override requested on 2026-09-28:
+  // rice, broad beans and any bundle containing either ingredient must be unavailable.
+  const temporaryUnavailableMarker = await db.setting.findUnique({ where: { key: "temporaryUnavailableRiceBroadBeans20260928V1" } });
+  if (!temporaryUnavailableMarker) {
+    await db.product.updateMany({
+      where: { legacyProductId: { in: [210, 258] } },
+      data: { stock: 0, stockStatus: "outofstock", allowBackorder: false },
+    });
+    await db.product.updateMany({
+      where: { slug: { in: ["adas-polo-aroos-haj-khanom", "gheymeh-khoonegi"] } },
+      data: { stock: 0, stockStatus: "outofstock", allowBackorder: false },
+    });
+    await db.setting.create({
+      data: { key: "temporaryUnavailableRiceBroadBeans20260928V1", value: new Date().toISOString() },
+    });
   }
 
   // Repair product image references from the recovered legacy storefront source.
