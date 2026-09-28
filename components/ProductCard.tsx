@@ -1,6 +1,7 @@
 import Link from "next/link";
 import AddToCartButton from "@/components/AddToCartButton";
 import { toman } from "@/lib/money";
+import { ScaleIcon, TagIcon } from "@/components/Icons";
 
 type ProductCardData = {
   id: string;
@@ -27,8 +28,8 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
         <Link href={"/product/" + product.slug}><h3>{product.name}</h3></Link>
         <p>{product.shortDescription}</p>
         <div className="product-meta">
-          <strong>{product.price > 0 ? toman(product.price) : "قیمت در حال به‌روزرسانی"}</strong>
-          {product.weightGrams ? <span>{product.weightGrams.toLocaleString("fa-IR")} گرم</span> : null}
+          <strong><TagIcon size={17} />{product.price > 0 ? toman(product.price) : "قیمت در حال به‌روزرسانی"}</strong>
+          {product.weightGrams ? <span><ScaleIcon size={16} />{product.weightGrams.toLocaleString("fa-IR")} گرم</span> : null}
         </div>
         <AddToCartButton compact product={{
           id: product.id,
