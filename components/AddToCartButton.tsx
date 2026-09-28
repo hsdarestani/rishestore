@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useCart } from "@/components/CartProvider";
+import { CartIcon } from "@/components/Icons";
 
 type ProductInput = {
   id: string;
@@ -38,7 +39,8 @@ export default function AddToCartButton({ product, compact = false }: { product:
         window.setTimeout(() => setAdded(false), 1400);
       }}
     >
-      {added ? "به سبد اضافه شد" : product.stock > 0 ? "افزودن به سبد" : "پیش‌سفارش"}
+      <CartIcon size={compact ? 17 : 20} />
+      <span>{added ? "به سبد اضافه شد" : product.stock > 0 ? "افزودن به سبد" : "پیش‌سفارش"}</span>
     </button>
   );
 }
