@@ -130,10 +130,10 @@ export default async function HomePage() {
 
       {packs.length > 0 && <section className="section section-dark"><div className="container"><div className="section-heading light"><span>پک‌ها</span><h2>چند انتخاب کنار هم، یک خرید ساده‌تر.</h2></div><div className="product-grid">{packs.map((p) => <ProductCard key={p.id} product={p} />)}</div><Link className="btn btn-light" href="/packs">همه پک‌ها</Link></div></section>}
 
-      <section className="section container">
-        <div className="section-heading"><span>اعتماد شما عیار ماست</span><h2>تجربه خریداران ریشه</h2><p>روایت کسانی که با تکیه بر «شرط پخت ریشه» اصالت را به سفره‌هایشان برگرداندند.</p></div>
-        {reviews.length ? <div className="review-grid home-reviews">{reviews.map((r) => <blockquote key={r.id}><div>{"★".repeat(Math.max(1, Math.min(5, r.rating)))}</div><p>«{r.text}»</p><cite>{r.name}</cite></blockquote>)}</div> : null}
-      </section>
+      {reviews.length > 0 && <section className="section container">
+        <div className="section-heading"><span>اعتماد شما عیار ماست</span><h2>تجربه خریداران ریشه</h2></div>
+        <div className="review-grid home-reviews">{reviews.map((r) => <blockquote key={r.id}><div>{"★".repeat(Math.max(1, Math.min(5, r.rating)))}</div><p>«{r.text}»</p><cite>{r.name}</cite></blockquote>)}</div>
+      </section>}
 
       <section className="section container">
         <div className="section-heading row-heading"><div><span>مجله ریشه</span><h2>همه روایت‌ها و راهنماهای بلاگ</h2></div><Link href="/magazine">همه مطالب ←</Link></div>

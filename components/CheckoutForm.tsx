@@ -65,7 +65,7 @@ export default function CheckoutForm({ user, config }: { user: UserSeed; config:
     event.preventDefault();
     setError("");
     if (!items.length) return setError("سبد خرید خالی است.");
-    if (!config.paymentReady) return setError("درگاه زیبال هنوز روی سرور فعال نشده است.");
+    if (!config.paymentReady) return setError("پرداخت آنلاین موقتاً در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید.");
 
     setBusy(true);
     const form = new FormData(event.currentTarget);
@@ -133,7 +133,7 @@ export default function CheckoutForm({ user, config }: { user: UserSeed; config:
 
         <div className="checkout-promo">
           <label htmlFor="promotionCode">کد تخفیف</label>
-          <div><input id="promotionCode" value={promotionCode} onChange={(e) => { setPromotionCode(e.target.value); setQuote(null); setPromoMessage(""); }} placeholder="مثلاً RISHE10" /><button type="button" onClick={applyPromotion} disabled={quoteBusy}>{quoteBusy ? "…" : "اعمال"}</button></div>
+          <div><input id="promotionCode" value={promotionCode} onChange={(e) => { setPromotionCode(e.target.value); setQuote(null); setPromoMessage(""); }} placeholder="کد تخفیف" /><button type="button" onClick={applyPromotion} disabled={quoteBusy}>{quoteBusy ? "…" : "اعمال"}</button></div>
           {promoMessage && <small>{promoMessage}</small>}
         </div>
 
@@ -143,7 +143,7 @@ export default function CheckoutForm({ user, config }: { user: UserSeed; config:
           <div><span>ارسال</span><strong>{effective.shippingCost === 0 ? "رایگان" : toman(effective.shippingCost)}</strong></div>
           <div className="grand"><span>مبلغ پرداخت</span><strong>{toman(effective.total)}</strong></div>
         </div>
-        {!config.paymentReady && <p className="alert warning">متغیر امن ZIBAL_MERCHANT روی سرور پیدا نشد؛ پرداخت تا زمان تنظیم آن غیرفعال است.</p>}
+        {!config.paymentReady && <p className="alert warning">پرداخت آنلاین موقتاً در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید.</p>}
         {error && <p className="alert error">{error}</p>}
         <button className="btn btn-primary btn-wide" disabled={busy || !config.paymentReady}>{busy ? "در حال اتصال به زیبال…" : "تأیید و پرداخت با زیبال"}</button>
         <small className="muted">پس از تأیید، به صفحه امن درگاه زیبال منتقل می‌شوید. موجودی سبد هنگام ثبت سفارش برای مدت محدود رزرو می‌شود.</small>
