@@ -76,6 +76,8 @@ jobs:
 
           echo "Recent payment diagnostics from the currently running app:"
           docker compose logs --since 2h app 2>&1 | grep -E 'PAYMENT_|INVALID_ORIGIN|payment/start|zibal|Zibal' | tail -80 || true
+          OUTBOUND_IP="$(curl -4 -fsS --max-time 10 https://api.ipify.org || true)"
+          echo "Server outbound IPv4: $OUTBOUND_IP"
 
           git fetch origin main
           git reset --hard origin/main

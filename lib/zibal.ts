@@ -35,7 +35,10 @@ export async function createZibalTransaction(input: {
   });
 
   if (Number(result.result) !== 100 || !result.trackId) {
-    throw new Error("PAYMENT_REQUEST_ERROR:" + String(result.result ?? "unknown"));
+    const code = String(result.result ?? "unknown");
+    const message = result.message ? String(result.message) : "";
+    console.error("ZIBAL_REQUEST_FAILED", { code, message });
+    throw new Error("PAYMENT_REQUEST_ERROR:" + code);
   }
 
   const trackId = String(result.trackId);

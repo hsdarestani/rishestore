@@ -38,10 +38,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: payment.url });
   } catch (error) {
     console.error(error);
-    const message =
-      error instanceof Error && error.message === "PAYMENT_NOT_CONFIGURED"
-        ? "درگاه زیبال روی سرور تنظیم نشده است."
-        : "اتصال به درگاه زیبال انجام نشد.";
+    let message = "اتصال به درگاه زیبال انجام نشد.";
+    if (error instanceof Error) {
+      if (error.message === "PAYMENT_NOT_CONFIGURED") {
+        message = "درگاه زیبال روی سرور تنظیم نشده است.";
+      } else if (error.message === "PAYMENT_REQUEST_ERROR:115") {
+        message = "IP سرور فروشگاه هنوز در پنل زیبال ثبت نشده است.";
+      } else if (error.message === "PAYMENT_REQUEST_ERROR:102") {
+        message = "کد مرچنت زیبال پیدا نشد.";
+      } else if (error.message === "PAYMENT_REQUEST_ERROR:103") {
+        message = "مرچنت زیبال غیرفعال است.";
+      } else if (error.message === "PAYMENT_REQUEST_ERROR:104") {
+        message = "کد مرچنت زیبال نامعتبر است.";
+      } else if (error.message === "PAYMENT_REQUEST_ERROR:105") {
+        message = "مبلغ پرداخت برای زیبال معتبر نیست.";
+      } else if (error.message === "PAYMENT_REQUEST_ERROR:106") {
+        message = "آدرس بازگشت پرداخت در زیبال معتبر نیست.";
+      } else if (error.message === "PAYMENT_REQUEST_ERROR:113") {
+        message = "مبلغ پرداخت از سقف مجاز زیبال بیشتر است.";
+      }
+    }
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
