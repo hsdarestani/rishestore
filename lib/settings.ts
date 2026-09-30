@@ -17,7 +17,7 @@ function encrypt(value: string) {
 function decrypt(value: string) {
   if (!value.startsWith("enc1.")) return value;
   const [, ivRaw, tagRaw, dataRaw] = value.split(".");
-  const decipher = createDecipheriv("aes-256-gcm", key(), Buffer.from(ivRaw, "base64url"));
+  const decipher = createDecipheriv("aes-256-gcm", key(), iv,);
   decipher.setAuthTag(Buffer.from(tagRaw, "base64url"));
   return Buffer.concat([decipher.update(Buffer.from(dataRaw, "base64url")), decipher.final()]).toString("utf8");
 }
@@ -37,17 +37,26 @@ export async function setSetting(name: string, value: string, sensitive = false)
   return db.setting.upsert({ where: { key: name }, create: { key: name, value: stored }, update: { value: stored } });
 }
 
+function whatsappFromPhone(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  const international = digits.startsWith("98") ? digits : digits.startsWith("0") ? "98" + digits.slice(1) : digits;
+  return international.length >= 11 ? "https://wa.me/" + international : "";
+}
+
 export async function getStoreConfig() {
   const rows = await db.setting.findMany();
   const map = Object.fromEntries(rows.map((row) => [row.key, row.value]));
   const shippingFlatRate = Number(map.shippingFlatRate || 0);
   const freeShippingThreshold = Number(map.freeShippingThreshold || 0);
+  const storePhone = map.storePhone || "09910938033";
   return {
     storeName: map.storeName || "ریشه",
-    storePhone: map.storePhone || "09910938033",
+    storePhone,
     instagramUrl: map.instagramUrl || "",
     baleUrl: map.baleUrl || "https://ble.ir/rishe_store",
+    whatsappUrl: map.whatsappUrl || whatsappFromPhone(storePhone),
     warehouseAddress: map.warehouseAddress || "کرج، محمدشهر، بلوار دشت بهشت",
+    storeAddress: map.storeAddress || "",
     shippingFlatRate: Number.isFinite(shippingFlatRate) ? shippingFlatRate : 0,
     freeShippingThreshold: Number.isFinite(freeShippingThreshold) ? freeShippingThreshold : 0,
     paymentProvider: "zibal",

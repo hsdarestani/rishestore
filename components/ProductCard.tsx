@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import AddToCartButton from "@/components/AddToCartButton";
+import SafeProductImage from "@/components/SafeProductImage";
 import { toman } from "@/lib/money";
 import { ScaleIcon, SparklesIcon, TagIcon } from "@/components/Icons";
 
@@ -27,7 +28,7 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
     <article className="product-card">
       <Link href={"/product/" + product.slug} className="product-media">
         {product.image
-          ? <img src={product.image} alt={product.name} loading="lazy" />
+          ? <SafeProductImage src={product.image} alt={product.name} fallback={product.kind === "PACK" ? "تصویر این پک به‌زودی اضافه می‌شود" : "تصویر محصول به‌زودی اضافه می‌شود"} />
           : product.kind === "PACK"
             ? <span className="product-fallback pack-fallback"><SparklesIcon size={42} /><small>پک ریشه</small></span>
             : <span className="product-fallback">{product.name.slice(0, 1)}</span>}

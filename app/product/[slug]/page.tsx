@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { toman } from "@/lib/money";
 import AddToCartButton from "@/components/AddToCartButton";
 import ProductCard from "@/components/ProductCard";
+import SafeProductImage from "@/components/SafeProductImage";
 import { BoxIcon, ScaleIcon, ShieldIcon, TagIcon, TruckIcon } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
@@ -73,7 +74,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
     <section className="product-page">
       <div className="product-gallery">
-        {product.image ? <img src={product.image} alt={text(hero.display_title) || product.name} /> : <div className="product-large-fallback"><span>{product.name}</span><small>تصویر محصول در حال آماده‌سازی است</small></div>}
+        <SafeProductImage src={product.image} alt={text(hero.display_title) || product.name} priority fallback="تصویر این محصول هنوز اضافه نشده است" />
       </div>
 
       <div className="product-info">
@@ -125,7 +126,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         {product.origin && <div><dt>مبدأ</dt><dd>{product.origin}</dd></div>}
         {product.usage && <div><dt>کاربرد</dt><dd>{product.usage}</dd></div>}
         <div><dt>وضعیت فروش</dt><dd>{product.stock > 0 ? "موجود" : product.allowBackorder ? "قابل پیش‌سفارش" : "ناموجود"}</dd></div>
-        {product.stockStatus && <div><dt>وضعیت انبار</dt><dd>{product.stockStatus}</dd></div>}
+        {product.stockStatus && <div><dt>وضعیت انبار</dt><dd>{product.stockStatus === "instock" ? "موجود" : product.stockStatus === "outofstock" ? "ناموجود" : product.stockStatus === "onbackorder" ? "پیش‌سفارش" : product.stockStatus}</dd></div>}
       </dl>
     </section>
 

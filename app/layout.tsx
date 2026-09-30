@@ -17,7 +17,19 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  let config = { storeName: "ریشه", storePhone: "09910938033", instagramUrl: "", baleUrl: "https://ble.ir/rishe_store", warehouseAddress: "کرج، محمدشهر، بلوار دشت بهشت" };
+  let config = {
+    storeName: "ریشه",
+    storePhone: "09910938033",
+    instagramUrl: "",
+    baleUrl: "https://ble.ir/rishe_store",
+    whatsappUrl: "https://wa.me/989910938033",
+    warehouseAddress: "کرج، محمدشهر، بلوار دشت بهشت",
+    storeAddress: "",
+    shippingFlatRate: 0,
+    freeShippingThreshold: 0,
+    paymentProvider: "zibal",
+    paymentReady: false,
+  };
   try { config = await getStoreConfig(); } catch {}
 
   return (
@@ -25,7 +37,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body>
         <CartProvider>
           <MotionController />
-          <SiteChrome storeName={config.storeName} phone={config.storePhone} instagram={config.instagramUrl} bale={config.baleUrl} warehouseAddress={config.warehouseAddress}>
+          <SiteChrome
+            storeName={config.storeName}
+            phone={config.storePhone}
+            instagram={config.instagramUrl}
+            bale={config.baleUrl}
+            whatsapp={config.whatsappUrl}
+            warehouseAddress={config.warehouseAddress}
+            storeAddress={config.storeAddress}
+          >
             {children}
           </SiteChrome>
         </CartProvider>

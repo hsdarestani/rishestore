@@ -16,7 +16,7 @@ function sessionId() {
   return value;
 }
 
-export default function SupportChat() {
+export default function SupportChat({ phone, whatsapp, bale }: { phone?: string; whatsapp?: string; bale?: string }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
@@ -37,7 +37,7 @@ export default function SupportChat() {
 
   useEffect(() => {
     load();
-    const timer = window.setInterval(load, 4000);
+    const timer = window.setInterval(load, 6000);
     return () => window.clearInterval(timer);
   }, []);
 
@@ -72,14 +72,19 @@ export default function SupportChat() {
 
   return <>
     <button type="button" className="support-chat-toggle" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-controls="rishe-support-chat">
-      <span>؟</span><b>سوالی دارید؟ پشتیبانی آنلاین</b>
+      <span>؟</span><b>پشتیبانی ریشه</b>
     </button>
     <section id="rishe-support-chat" className={"support-chat " + (open ? "open" : "")} aria-hidden={!open}>
-      <header><div><strong>پشتیبانی آنلاین ریشه</strong><span>پاسخ از تیم ریشه</span></div><button onClick={() => setOpen(false)} aria-label="بستن">×</button></header>
+      <header><div><strong>پشتیبانی ریشه</strong><span>یک نقطه برای همه راه‌های ارتباطی</span></div><button onClick={() => setOpen(false)} aria-label="بستن">×</button></header>
+      <div className="support-quick-links">
+        {phone && <a href={"tel:" + phone}>تماس</a>}
+        {whatsapp && <a href={whatsapp} target="_blank" rel="noreferrer">واتس‌اپ</a>}
+        {bale && <a href={bale} target="_blank" rel="noreferrer">بله</a>}
+      </div>
       <div className="support-chat-messages" ref={box}>
-        {!messages.length && <div className="chat-message admin">سلام! چطور می‌تونم کمکتون کنم؟</div>}
+        {!messages.length && <div className="chat-message admin">سلام! درباره خرید، سفارش یا محصول سوالی دارید همین‌جا پیام بدهید.</div>}
         {messages.map((m) => <div key={m.id} className={"chat-message " + (m.sender === "user" ? "user" : "admin")}>{m.text}</div>)}
-        {!configured && <div className="chat-message system">اگر پاسخ آنلاین در دسترس نبود، می‌توانید از لینک بله در فوتر هم پیام بدهید.</div>}
+        {!configured && <div className="chat-message system">پاسخ آنلاین در دسترس نیست؛ از واتس‌اپ، بله یا تماس تلفنی استفاده کنید.</div>}
       </div>
       <form onSubmit={send}><input value={text} onChange={(e) => setText(e.target.value)} placeholder="پیام خود را بنویسید…" maxLength={1200} /><button disabled={busy}>{busy ? "…" : "ارسال"}</button></form>
       {error && <small>{error}</small>}
