@@ -3,19 +3,58 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useCart } from "@/components/CartProvider";
 import { toman } from "@/lib/money";
+import { IRAN_LOCATIONS, IRAN_PROVINCES, OTHER_CITY } from "@/lib/iranLocations";
 
 type UserSeed = { name?: string | null; phone?: string | null; email?: string | null } | null;
 type Config = { shippingFlatRate: number; freeShippingThreshold: number; paymentReady: boolean };
 type Quote = { subtotal: number; discount: number; shippingCost: number; total: number; promotionCode?: string | null };
+type AddressSeed = {
+  id: string;
+  title: string;
+  province: string;
+  city: string;
+  address: string;
+  postalCode?: string | null;
+};
 
-export default function CheckoutForm({ user, config }: { user: UserSeed; config: Config }) {
+function knownCity(province: string, city: string) {
+  return Boolean(city && IRAN_LOCATIONS[province]?.includes(city));
+}
+
+export default function CheckoutForm({
+  user,
+  config,
+  addresses = [],
+}: {
+  user: UserSeed;
+  config: Config;
+  addresses?: AddressSeed[];
+}) {
   const { items, total: subtotal, clear, hydrated } = useCart();
+  const initialAddress = addresses[0] || null;
+  const initialProvince = initialAddress?.province || "";
+  const initialCity = initialAddress?.city || "";
+
   const [busy, setBusy] = useState(false);
   const [quoteBusy, setQuoteBusy] = useState(false);
   const [error, setError] = useState("");
   const [promoMessage, setPromoMessage] = useState("");
   const [promotionCode, setPromotionCode] = useState("");
   const [quote, setQuote] = useState<Quote | null>(null);
+
+  const [selectedAddressId, setSelectedAddressId] = useState(initialAddress?.id || "");
+  const [province, setProvince] = useState(initialProvince);
+  const [cityChoice, setCityChoice] = useState(
+    initialCity ? (knownCity(initialProvince, initialCity) ? initialCity : OTHER_CITY) : ""
+  );
+  const [customCity, setCustomCity] = useState(
+    initialCity && !knownCity(initialProvince, initialCity) ? initialCity : ""
+  );
+  const [address, setAddress] = useState(initialAddress?.address || "");
+  const [postalCode, setPostalCode] = useState(initialAddress?.postalCode || "");
+
+  const cityValue = cityChoice === OTHER_CITY ? customCity.trim() : cityChoice;
+  const cities = province ? IRAN_LOCATIONS[province] || [] : [];
 
   const fallbackShipping = useMemo(() => {
     if (config.freeShippingThreshold > 0 && subtotal >= config.freeShippingThreshold) return 0;
@@ -30,8 +69,39 @@ export default function CheckoutForm({ user, config }: { user: UserSeed; config:
     promotionCode: null,
   };
 
+  function chooseSavedAddress(id: string) {
+    setSelectedAddressId(id);
+    const selected = addresses.find((item) => item.id === id);
+    if (!selected) {
+      setProvince("");
+      setCityChoice("");
+      setCustomCity("");
+      setAddress("");
+      setPostalCode("");
+      return;
+    }
+    setProvince(selected.province);
+    if (knownCity(selected.province, selected.city)) {
+      setCityChoice(selected.city);
+      setCustomCity("");
+    } else {
+      setCityChoice(OTHER_CITY);
+      setCustomCity(selected.city);
+    }
+    setAddress(selected.address);
+    setPostalCode(selected.postalCode || "");
+  }
+
+  function changeProvince(nextProvince: string) {
+    setProvince(nextProvince);
+    setSelectedAddressId("");
+    setCityChoice("");
+    setCustomCity("");
+  }
+
   async function applyPromotion() {
-    setError(""); setPromoMessage("");
+    setError("");
+    setPromoMessage("");
     const code = promotionCode.trim();
     if (!code) {
       setQuote(null);
@@ -65,6 +135,7 @@ export default function CheckoutForm({ user, config }: { user: UserSeed; config:
     event.preventDefault();
     setError("");
     if (!items.length) return setError("سبد خرید خالی است.");
+    if (!province || !cityValue) return setError("استان و شهر را انتخاب کنید.");
     if (!config.paymentReady) return setError("پرداخت آنلاین موقتاً در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید.");
 
     setBusy(true);
@@ -77,8 +148,8 @@ export default function CheckoutForm({ user, config }: { user: UserSeed; config:
           customerName: form.get("customerName"),
           phone: form.get("phone"),
           email: form.get("email"),
-          province: form.get("province"),
-          city: form.get("city"),
+          province,
+          city: cityValue,
           address: form.get("address"),
           postalCode: form.get("postalCode"),
           notes: form.get("notes"),
@@ -110,19 +181,111 @@ export default function CheckoutForm({ user, config }: { user: UserSeed; config:
   if (!items.length) return <div className="empty-state"><h2>سبد خرید خالی است</h2><a className="btn btn-primary" href="/shop">رفتن به فروشگاه</a></div>;
 
   return (
-    <form className="checkout-grid" onSubmit={submit}>
-      <section className="panel form-panel">
-        <div className="section-heading"><span>اطلاعات دریافت‌کننده</span><h1>تسویه‌حساب</h1><p>فقط اطلاعات لازم برای ارسال و پرداخت را وارد کنید.</p></div>
-        <div className="form-grid">
-          <label>نام و نام خانوادگی<input required name="customerName" defaultValue={user?.name || ""} autoComplete="name" /></label>
-          <label>شماره موبایل<input required name="phone" defaultValue={user?.phone || ""} inputMode="tel" autoComplete="tel" placeholder="09xxxxxxxxx" /></label>
-          <label>ایمیل، اختیاری<input name="email" defaultValue={user?.email || ""} type="email" autoComplete="email" /></label>
-          <label>استان<input required name="province" /></label>
-          <label>شهر<input required name="city" /></label>
-          <label className="span-2">آدرس دقیق<textarea required name="address" rows={4} /></label>
-          <label>کدپستی، اختیاری<input name="postalCode" inputMode="numeric" /></label>
-          <label className="span-2">توضیحات سفارش، اختیاری<textarea name="notes" rows={3} /></label>
+    <form className="checkout-grid checkout-easy" onSubmit={submit}>
+      <section className="panel form-panel checkout-form-panel">
+        <div className="section-heading checkout-heading">
+          <span>اطلاعات ارسال</span>
+          <h1>تقریباً تمام شد</h1>
+          <p>فقط مشخصات دریافت‌کننده و آدرس تحویل را وارد کنید.</p>
         </div>
+
+        {addresses.length > 0 && (
+          <div className="checkout-saved-address">
+            <label htmlFor="savedAddress">آدرس‌های ذخیره‌شده</label>
+            <select id="savedAddress" value={selectedAddressId} onChange={(e) => chooseSavedAddress(e.target.value)}>
+              {addresses.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.title || "آدرس من"} · {item.city}
+                </option>
+              ))}
+              <option value="">＋ آدرس جدید</option>
+            </select>
+            <small>با انتخاب آدرس، استان، شهر و نشانی به‌صورت خودکار پر می‌شود.</small>
+          </div>
+        )}
+
+        <div className="checkout-section">
+          <div className="checkout-section-title">
+            <b>۱</b>
+            <div><strong>دریافت‌کننده</strong><span>برای هماهنگی تحویل</span></div>
+          </div>
+          <div className="form-grid checkout-contact-grid">
+            <label>نام و نام خانوادگی<input required name="customerName" defaultValue={user?.name || ""} autoComplete="name" /></label>
+            <label>شماره موبایل<input required name="phone" defaultValue={user?.phone || ""} inputMode="tel" autoComplete="tel" placeholder="09xxxxxxxxx" /></label>
+          </div>
+        </div>
+
+        <div className="checkout-section">
+          <div className="checkout-section-title">
+            <b>۲</b>
+            <div><strong>آدرس تحویل</strong><span>استان و شهر را انتخاب کنید</span></div>
+          </div>
+
+          <div className="form-grid checkout-location-grid">
+            <label>
+              استان
+              <select required value={province} onChange={(e) => changeProvince(e.target.value)}>
+                <option value="">انتخاب استان</option>
+                {IRAN_PROVINCES.map((item) => <option key={item} value={item}>{item}</option>)}
+              </select>
+            </label>
+
+            <label>
+              شهر
+              <select
+                required
+                value={cityChoice}
+                disabled={!province}
+                onChange={(e) => {
+                  setCityChoice(e.target.value);
+                  setSelectedAddressId("");
+                  if (e.target.value !== OTHER_CITY) setCustomCity("");
+                }}
+              >
+                <option value="">{province ? "انتخاب شهر" : "اول استان را انتخاب کنید"}</option>
+                {cities.map((item) => <option key={item} value={item}>{item}</option>)}
+                {province && <option value={OTHER_CITY}>شهر دیگر…</option>}
+              </select>
+            </label>
+
+            {cityChoice === OTHER_CITY && (
+              <label className="span-2 checkout-custom-city">
+                نام شهر
+                <input
+                  required
+                  value={customCity}
+                  onChange={(e) => setCustomCity(e.target.value)}
+                  placeholder="نام شهر را بنویسید"
+                />
+              </label>
+            )}
+
+            <label className="span-2">
+              آدرس دقیق
+              <textarea
+                required
+                name="address"
+                rows={3}
+                value={address}
+                onChange={(e) => { setAddress(e.target.value); setSelectedAddressId(""); }}
+                placeholder="مثلاً خیابان، کوچه، پلاک و واحد"
+                autoComplete="street-address"
+              />
+            </label>
+          </div>
+        </div>
+
+        <details className="checkout-optional">
+          <summary>
+            <div><strong>اطلاعات اختیاری</strong><span>ایمیل، کدپستی و توضیحات سفارش</span></div>
+            <b>＋</b>
+          </summary>
+          <div className="form-grid checkout-optional-grid">
+            <label>ایمیل<input name="email" defaultValue={user?.email || ""} type="email" autoComplete="email" placeholder="اختیاری" /></label>
+            <label>کدپستی<input name="postalCode" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} inputMode="numeric" placeholder="اختیاری" /></label>
+            <label className="span-2">توضیحات سفارش<textarea name="notes" rows={2} placeholder="مثلاً ساعت مناسب برای تحویل" /></label>
+          </div>
+        </details>
       </section>
 
       <aside className="panel order-summary">
@@ -146,7 +309,7 @@ export default function CheckoutForm({ user, config }: { user: UserSeed; config:
         {!config.paymentReady && <p className="alert warning">پرداخت آنلاین موقتاً در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید.</p>}
         {error && <p className="alert error">{error}</p>}
         <button className="btn btn-primary btn-wide" disabled={busy || !config.paymentReady}>{busy ? "در حال اتصال به زیبال…" : "تأیید و پرداخت با زیبال"}</button>
-        <small className="muted">پس از تأیید، به صفحه امن درگاه زیبال منتقل می‌شوید. موجودی سبد هنگام ثبت سفارش برای مدت محدود رزرو می‌شود.</small>
+        <small className="muted">پس از تأیید، به صفحه امن درگاه زیبال منتقل می‌شوید.</small>
       </aside>
     </form>
   );

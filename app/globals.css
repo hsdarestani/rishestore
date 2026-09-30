@@ -744,3 +744,51 @@ label{font-size:14px}
   .brand-image{min-width:96px}
   .brand-logo{width:96px;height:46px}
 }
+
+
+/* Easier checkout 2026-09-30 */
+.checkout-easy{align-items:start}
+.checkout-form-panel{padding:30px}
+.checkout-heading{margin-bottom:24px}
+.checkout-heading h1{font-size:42px}
+.checkout-saved-address{background:#eef5e4;border:1px solid #dbe9ca;border-radius:18px;padding:16px;margin-bottom:18px}
+.checkout-saved-address label{display:block;font-weight:900;color:#456d1d;margin-bottom:7px}
+.checkout-saved-address select{width:100%;min-height:50px;border:1px solid #cfdcbc;background:#fff;border-radius:13px;padding:0 13px;outline:none}
+.checkout-saved-address small{display:block;color:#718060;margin-top:7px}
+.checkout-section{border:1px solid #e5e7df;border-radius:20px;padding:20px;margin-top:15px;background:#fff}
+.checkout-section-title{display:flex;align-items:center;gap:11px;margin-bottom:16px}
+.checkout-section-title>b{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#2e3191;color:#fff;font-family:var(--rishe-title-font)}
+.checkout-section-title strong,.checkout-section-title span{display:block}
+.checkout-section-title strong{font-family:var(--rishe-title-font);font-size:19px;color:#292c64}
+.checkout-section-title span{font-size:14px;color:#858991;margin-top:1px}
+.checkout-location-grid select,.checkout-contact-grid select{width:100%;border:1px solid #dfe2da;background:#fff;border-radius:12px;padding:11px 12px;margin-top:6px;outline:none;min-height:50px}
+.checkout-location-grid select:focus,.checkout-saved-address select:focus{border-color:#8bc53f;box-shadow:0 0 0 3px rgba(139,197,63,.12)}
+.checkout-location-grid select:disabled{background:#f3f4f0;color:#9a9da3;cursor:not-allowed}
+.checkout-location-grid textarea{resize:vertical;min-height:100px}
+.checkout-optional{margin-top:15px;border:1px solid #e5e7df;border-radius:18px;background:#fafbf7;overflow:hidden}
+.checkout-optional>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px}
+.checkout-optional>summary::-webkit-details-marker{display:none}
+.checkout-optional>summary strong,.checkout-optional>summary span{display:block}
+.checkout-optional>summary strong{font-family:var(--rishe-title-font);color:#292c64;font-size:17px}
+.checkout-optional>summary span{font-size:13px;color:#858991;margin-top:2px}
+.checkout-optional>summary>b{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:#eef0ea;color:#2e3191;font-size:20px;transition:transform .2s ease}
+.checkout-optional[open]>summary>b{transform:rotate(45deg)}
+.checkout-optional-grid{padding:0 18px 18px;border-top:1px solid #eceee8;padding-top:16px}
+.checkout-easy .order-summary{border-radius:22px}
+.checkout-easy .order-summary>h2{font-size:28px}
+.checkout-easy .summary-lines>div,.checkout-easy .summary-totals>div{padding:11px 0}
+.checkout-easy .summary-totals .grand{font-size:18px}
+.checkout-easy .order-summary>.btn{min-height:54px;font-size:17px}
+
+@media(min-width:981px){
+  .checkout-easy{grid-template-columns:minmax(0,1fr) 360px;gap:28px}
+  .checkout-form-panel{padding:34px}
+}
+@media(max-width:650px){
+  .checkout-form-panel{padding:18px}
+  .checkout-heading h1{font-size:34px}
+  .checkout-section{padding:16px}
+  .checkout-contact-grid,.checkout-location-grid,.checkout-optional-grid{grid-template-columns:1fr}
+  .checkout-contact-grid .span-2,.checkout-location-grid .span-2,.checkout-optional-grid .span-2{grid-column:auto}
+  .checkout-section-title strong{font-size:18px}
+}
