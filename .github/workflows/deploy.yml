@@ -103,6 +103,16 @@ jobs:
           fi
 
           ZIBAL_MERCHANT="$(printf '%s' "$ZIBAL_MERCHANT_B64" | base64 -d)"
+
+          echo "Direct Zibal API diagnostic:"
+          ZIBAL_DIAG="$(curl -4 -sS --max-time 20 https://gateway.zibal.ir/v1/request \
+            -H 'content-type: application/json' \
+            --data-binary "$(printf '{"merchant":"%s","amount":10000,"callbackUrl":"https://new.rishe.store/api/payment/callback","description":"Rishe gateway diagnostic"}' "$ZIBAL_MERCHANT")" || true)"
+          ZIBAL_DIAG_CODE="$(printf '%s' "$ZIBAL_DIAG" | sed -n 's/.*"result"[[:space:]]*:[[:space:]]*\([0-9-]*\).*/\1/p' | head -1)"
+          ZIBAL_DIAG_MSG="$(printf '%s' "$ZIBAL_DIAG" | sed -n 's/.*"message"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
+          echo "Zibal direct result: ${ZIBAL_DIAG_CODE:-unknown}"
+          if [ -n "$ZIBAL_DIAG_MSG" ]; then echo "Zibal direct message: $ZIBAL_DIAG_MSG"; fi
+
           BALE_BOT_TOKEN="$(printf '%s' "$BALE_TOKEN_B64" | base64 -d)"
           BALE_ADMIN_CHAT_ID="$(printf '%s' "$BALE_CHAT_B64" | base64 -d)"
           BALE_WEBHOOK_SECRET="$(printf '%s' "$BALE_WEBHOOK_B64" | base64 -d)"
