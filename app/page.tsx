@@ -47,8 +47,8 @@ export default async function HomePage() {
           <div className="hero-art hero-photo">
             <img className="hero-main-photo" src="/brand/hero.png" alt="محصولات دست‌چین ریشه" />
             <div className="hero-product-stack" aria-hidden>
-              <img src="/brand/products/legacy-124.png" alt="" />
-              <img src="/brand/products/legacy-251.png" alt="" />
+              <img src="/brand/products/legacy-124.jpg" alt="" />
+              <img src="/brand/products/legacy-251.jpg" alt="" />
               <img src="/brand/products/legacy-113.jpg" alt="" />
             </div>
             <div className="hero-note">به شرط پخت؛ اگر راضی نبودی، پس می‌گیریم</div>
