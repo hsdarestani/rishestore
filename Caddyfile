@@ -2,7 +2,7 @@
   debug
 }
 
-new.rishe.store {
+new.rishe.store, rishe.store, www.rishe.store {
   encode zstd gzip
 
   reverse_proxy {

@@ -24,12 +24,12 @@ export async function createZibalTransaction(input: {
   orderCode: string;
   mobile?: string | null;
 }) {
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+  const callbackBase = (process.env.ZIBAL_CALLBACK_BASE_URL || "https://rishe.store").replace(/\/$/, "");
   const amountRial = Math.max(0, Math.trunc(input.amountToman * 10));
   const result = await postJson(REQUEST_URL, {
     merchant: merchant(),
     amount: amountRial,
-    callbackUrl: siteUrl + "/api/payment/callback",
+    callbackUrl: callbackBase + "/api/payment/callback",
     description: "سفارش ریشه " + input.orderCode,
     ...(input.mobile ? { mobile: input.mobile } : {}),
   });

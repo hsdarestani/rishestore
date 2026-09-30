@@ -107,7 +107,7 @@ jobs:
           echo "Direct Zibal API diagnostic:"
           ZIBAL_DIAG="$(curl -4 -sS --max-time 20 https://gateway.zibal.ir/v1/request \
             -H 'content-type: application/json' \
-            --data-binary "$(printf '{"merchant":"%s","amount":10000,"callbackUrl":"https://new.rishe.store/api/payment/callback","description":"Rishe gateway diagnostic"}' "$ZIBAL_MERCHANT")" || true)"
+            --data-binary "$(printf '{"merchant":"%s","amount":10000,"callbackUrl":"https://rishe.store/api/payment/callback","description":"Rishe gateway diagnostic"}' "$ZIBAL_MERCHANT")" || true)"
           ZIBAL_DIAG_CODE="$(printf '%s' "$ZIBAL_DIAG" | sed -n 's/.*"result"[[:space:]]*:[[:space:]]*\([0-9-]*\).*/\1/p' | head -1)"
           ZIBAL_DIAG_MSG="$(printf '%s' "$ZIBAL_DIAG" | sed -n 's/.*"message"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
           echo "Zibal direct result: ${ZIBAL_DIAG_CODE:-unknown}"
@@ -173,6 +173,9 @@ jobs:
 
           echo "Recreating Caddy after app recreation..."
           docker compose up -d --force-recreate --no-deps caddy
+          echo "Checking registered Zibal callback host:"
+          ROOT_CODE="$(curl -LsS --max-time 15 -o /tmp/rishe-root-health -w '%{http_code}' https://rishe.store/api/health || true)"
+          echo "rishe.store health HTTP: $ROOT_CODE"
           sleep 3
 
           echo "Checking Caddy to app connectivity..."
