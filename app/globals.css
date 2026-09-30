@@ -592,3 +592,106 @@ label{font-size:14px}
   .account-metrics article span{font-size:15px}
   .account-metrics article small{font-size:14px}
 }
+
+
+/* Desktop readability pass 2026-09-30 v2
+   Intentionally larger than the previous baseline for large desktop displays. */
+@media(min-width:981px){
+  body{font-size:18px;line-height:1.95}
+  .top-note{font-size:15px!important}
+  .main-nav{font-size:17px!important;gap:24px}
+  .header-search input{font-size:16px!important}
+  .account-link span,.cart-link .action-label{font-size:15px!important}
+  .btn{font-size:16px}
+  .eyebrow,.section-heading>span,.section-kicker{font-size:16px!important}
+  .row-heading>a{font-size:16px!important}
+
+  .hero-copy>p{font-size:19px;line-height:2.05}
+  .hero-note{font-size:15px!important}
+  .trust-strip span,.micro-trust span{font-size:15px!important}
+
+  .category-card h3{font-size:25px}
+  .category-card p{font-size:16px!important;line-height:1.95}
+  .category-card b,.category-index{font-size:15px!important}
+
+  .product-body h3{font-size:23px}
+  .product-body p{font-size:16px!important;line-height:2}
+  .product-meta strong{font-size:17px!important}
+  .product-meta span{font-size:15px!important}
+  .product-media em{font-size:14px!important}
+
+  .home-poem p{font-size:17px}
+  .home-story-card{grid-template-columns:170px 1fr;gap:22px;padding:20px}
+  .home-story-image{height:205px}
+  .home-story-index{font-size:13px!important;padding:6px 10px}
+  .home-story-copy{padding:7px 4px 4px}
+  .home-story-copy h3{font-size:27px!important;line-height:1.5;margin-bottom:8px}
+  .home-story-copy>strong{font-size:16px!important;margin-bottom:10px}
+  .home-story-copy p{font-size:16px!important;line-height:2!important;margin:8px 0!important}
+  .home-story-myth{font-size:18px!important;line-height:1.9!important}
+  .home-story-buy{font-size:15px!important;margin-top:12px}
+
+  .review-grid blockquote p,.review-grid cite{font-size:16px!important}
+  .article-card span{font-size:15px!important}
+  .article-card p{font-size:16px!important;line-height:1.95}
+  .article-card b{font-size:15px!important}
+
+  .page-hero p,.lead,.prose{font-size:18px!important;line-height:2}
+  .breadcrumbs,.results-head,.category-pills a{font-size:15px!important}
+  .buy-box span,.details-list dt{font-size:15px!important}
+  .buy-box strong,.details-list dd{font-size:17px!important}
+  .legacy-spec-grid span{font-size:14px!important}
+  .legacy-spec-grid strong{font-size:16px!important}
+  .narrative-grid p{font-size:17px!important;line-height:2}
+
+  .cart-info span,.cart-info strong,.line-total{font-size:16px!important}
+  .cart-summary p,.text-link{font-size:15px!important}
+  .form-grid label,.auth-form label{font-size:15px!important}
+  .form-grid input,.form-grid textarea,.form-grid select,.auth-form input,.inline-form input{font-size:16px!important}
+  .summary-lines>div,.summary-totals>div,.muted,.alert{font-size:15px!important}
+
+  .account-head p{font-size:19px!important}
+  .account-metrics article span{font-size:16px!important}
+  .account-metrics article strong{font-size:31px!important}
+  .account-metrics article small{font-size:15px!important}
+  .orders-list article div{font-size:16px!important}
+  .orders-list article small{font-size:15px!important}
+  .address-list article p,.address-list article span,.loyalty-list div span{font-size:16px!important}
+  .loyalty-list div small,.empty-state.small{font-size:15px!important}
+
+  .faq-list summary{font-size:17px!important}
+  .faq-list summary span{font-size:14px!important}
+  .faq-list p{font-size:16px!important}
+  .side-card p,.side-card a:not(.btn){font-size:15px!important}
+
+  .footer-brand p{font-size:16px!important}
+  .site-footer h3{font-size:17px!important}
+  .site-footer>div>div>a{font-size:15px!important}
+  .footer-bottom{font-size:14px!important}
+
+  .support-chat{width:390px;height:540px}
+  .support-chat-toggle b{font-size:15px!important}
+  .support-chat>header strong{font-size:18px!important}
+  .support-chat>header span{font-size:14px!important}
+  .chat-message{font-size:15px!important;line-height:1.9}
+  .chat-message.system{font-size:14px!important}
+  .support-chat>form input,.support-chat>form button{font-size:15px!important}
+  .support-chat>small{font-size:13px!important}
+
+  .checkout-promo>label{font-size:15px!important}
+  .checkout-promo small{font-size:14px!important}
+
+  .about-story-copy{font-size:18px!important}
+  .about-visual span{font-size:15px!important}
+  .about-values p{font-size:16px!important;line-height:1.9}
+}
+
+/* Keep medium and small screens comfortably readable too. */
+@media(max-width:980px){
+  .home-story-copy p{font-size:16px!important}
+  .home-story-copy>strong{font-size:16px!important}
+  .home-story-myth{font-size:18px!important}
+  .home-story-buy{font-size:15px!important}
+  .support-chat>header span{font-size:13px!important}
+  .chat-message{font-size:15px!important}
+}
