@@ -17,7 +17,7 @@ function encrypt(value: string) {
 function decrypt(value: string) {
   if (!value.startsWith("enc1.")) return value;
   const [, ivRaw, tagRaw, dataRaw] = value.split(".");
-  const decipher = createDecipheriv("aes-256-gcm", key(), iv,);
+  const decipher = createDecipheriv("aes-256-gcm", key(), Buffer.from(ivRaw, "base64url"));
   decipher.setAuthTag(Buffer.from(tagRaw, "base64url"));
   return Buffer.concat([decipher.update(Buffer.from(dataRaw, "base64url")), decipher.final()]).toString("utf8");
 }
