@@ -21,7 +21,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     storeName: "ریشه",
     storePhone: "09910938033",
     instagramUrl: "",
-    baleUrl: "https://ble.ir/rishe_store",
+    baleUrl: "https://ble.ir/rishe_support",
     whatsappUrl: "https://wa.me/989910938033",
     warehouseAddress: "کرج، محمدشهر، بلوار دشت بهشت",
     storeAddress: "",
