@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import ProductCard from "@/components/ProductCard";
+import SafeProductImage from "@/components/SafeProductImage";
 import { ArrowLeftIcon, ShieldIcon, SparklesIcon, TruckIcon } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
@@ -45,11 +46,11 @@ export default async function HomePage() {
           </div>
 
           <div className="hero-art hero-photo">
-            <img className="hero-main-photo" src="/brand/hero.png" alt="محصولات دست‌چین ریشه" />
+            <img className="hero-main-photo" src="/brand/hero.png" alt="محصولات دست‌چین ریشه" loading="eager" decoding="async" />
             <div className="hero-product-stack" aria-hidden>
-              <img src="/brand/products/legacy-124.jpg" alt="" />
-              <img src="/brand/products/legacy-251.jpg" alt="" />
-              <img src="/brand/products/legacy-113.jpg" alt="" />
+              <img src="/brand/products/legacy-124.jpg" alt="" loading="lazy" decoding="async" />
+              <img src="/brand/products/legacy-251.jpg" alt="" loading="lazy" decoding="async" />
+              <img src="/brand/products/legacy-113.jpg" alt="" loading="lazy" decoding="async" />
             </div>
             <div className="hero-note">به شرط پخت؛ اگر راضی نبودی، پس می‌گیریم</div>
           </div>
@@ -114,7 +115,7 @@ export default async function HomePage() {
               const hero = legacy?.hero || {};
               return <Link key={product.id} href={"/product/" + product.slug} className="home-story-card">
                 <span className="home-story-index">۱۱ / {String(index + 1).padStart(2, "0")}</span>
-                <div className="home-story-image">{product.image ? <img src={product.image} alt={product.name} /> : <div className="product-fallback">ر</div>}</div>
+                <div className="home-story-image">{product.image ? <SafeProductImage src={product.image} alt={product.name} fallback="تصویر این محصول هنوز اضافه نشده است" /> : <div className="product-fallback">ر</div>}</div>
                 <div className="home-story-copy">
                   <h3>{text(hero.display_title) || product.name}</h3>
                   <strong>{product.price > 0 ? product.price.toLocaleString("fa-IR") + " تومان" : "قیمت در حال بروزرسانی"}</strong>

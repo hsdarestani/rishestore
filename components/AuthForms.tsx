@@ -61,7 +61,7 @@ export function AuthExperience() {
     try {
       await api("/api/auth/otp/request", { phone: loginPhone });
       setLoginSent(true);
-      setMessage("کد تایید ارسال شد.");
+      setMessage("کد تایید ارسال شد. اگر تا یک دقیقه پیامک را ندیدی، دوباره درخواست بده یا از ورود با رمز عبور استفاده کن.");
     } catch (e) {
       const err = e as ApiError;
       setError(err.message);
@@ -107,7 +107,7 @@ export function AuthExperience() {
     try {
       await api("/api/auth/otp/request", { phone: registerPhone });
       setRegisterSent(true);
-      setMessage("کد تایید برای ساخت حساب ارسال شد.");
+      setMessage("کد تایید ارسال شد. اگر پیامک نرسید، یک دقیقه بعد دوباره امتحان کن یا روش رمز عبور را انتخاب کن.");
     } catch (e) {
       const err = e as ApiError;
       setError(err.message);
@@ -159,9 +159,12 @@ export function AuthExperience() {
         <Field label="شماره موبایل">
           <input required value={loginPhone} onChange={(e)=>setLoginPhone(e.target.value)} inputMode="tel" placeholder="09xxxxxxxxx" disabled={loginSent} />
         </Field>
-        {loginSent && <Field label="کد تایید">
-          <input required value={loginCode} onChange={(e)=>setLoginCode(e.target.value)} inputMode="numeric" autoComplete="one-time-code" maxLength={4} placeholder="کد ۴ رقمی" />
-        </Field>}
+        {loginSent && <>
+          <Field label="کد تایید">
+            <input required value={loginCode} onChange={(e)=>setLoginCode(e.target.value)} inputMode="numeric" autoComplete="one-time-code" maxLength={4} placeholder="کد ۴ رقمی" />
+          </Field>
+          <p className="auth-otp-help">پیامک نیامد؟ تا ۶۰ ثانیه صبر کن و دوباره درخواست بده. ورود با رمز عبور هم همیشه در دسترس است.</p>
+        </>}
         {message && <p className="alert success">{message}</p>}
         {error && <p className="alert error">{error}</p>}
         <button className="btn btn-primary btn-wide auth-submit" disabled={busy}>{busy ? "در حال انجام…" : loginSent ? "تایید و ورود" : "ارسال کد ورود"}</button>
@@ -181,7 +184,10 @@ export function AuthExperience() {
         <Field label="نام و نام خانوادگی"><input required value={registerName} onChange={(e)=>setRegisterName(e.target.value)} disabled={registerSent} /></Field>
         <Field label="شماره موبایل"><input required value={registerPhone} onChange={(e)=>setRegisterPhone(e.target.value)} inputMode="tel" placeholder="09xxxxxxxxx" disabled={registerSent} /></Field>
         <Field label="ایمیل اختیاری"><input value={registerEmail} onChange={(e)=>setRegisterEmail(e.target.value)} type="email" disabled={registerSent} /></Field>
-        {registerSent && <Field label="کد تایید"><input required value={registerCode} onChange={(e)=>setRegisterCode(e.target.value)} inputMode="numeric" autoComplete="one-time-code" maxLength={4} placeholder="کد ۴ رقمی" /></Field>}
+        {registerSent && <>
+          <Field label="کد تایید"><input required value={registerCode} onChange={(e)=>setRegisterCode(e.target.value)} inputMode="numeric" autoComplete="one-time-code" maxLength={4} placeholder="کد ۴ رقمی" /></Field>
+          <p className="auth-otp-help">اگر پیامک نرسید، یک دقیقه بعد دوباره درخواست بده یا ثبت نام با رمز عبور را انتخاب کن.</p>
+        </>}
         {message && <p className="alert success">{message}</p>}
         {error && <p className="alert error">{error}</p>}
         <button className="btn btn-secondary btn-wide auth-submit" disabled={busy}>{busy ? "در حال انجام…" : registerSent ? "تایید و ساخت حساب" : "ارسال کد ثبت نام"}</button>
