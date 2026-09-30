@@ -49,11 +49,12 @@ export async function getStoreConfig() {
   const shippingFlatRate = Number(map.shippingFlatRate || 0);
   const freeShippingThreshold = Number(map.freeShippingThreshold || 0);
   const storePhone = map.storePhone || "09910938033";
+  const baleUrl = map.baleUrl && map.baleUrl !== "https://ble.ir/rishe_store" ? map.baleUrl : "https://ble.ir/rishe_support";
   return {
     storeName: map.storeName || "ریشه",
     storePhone,
     instagramUrl: map.instagramUrl || "",
-    baleUrl: map.baleUrl || "https://ble.ir/rishe_store",
+    baleUrl,
     whatsappUrl: map.whatsappUrl || whatsappFromPhone(storePhone),
     warehouseAddress: map.warehouseAddress || "کرج، محمدشهر، بلوار دشت بهشت",
     storeAddress: map.storeAddress || "",
