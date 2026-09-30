@@ -73,6 +73,10 @@ jobs:
           fi
 
           cd "$APP_DIR"
+
+          echo "Recent payment diagnostics from the currently running app:"
+          docker compose logs --since 2h app 2>&1 | grep -E 'PAYMENT_|INVALID_ORIGIN|payment/start|zibal|Zibal' | tail -80 || true
+
           git fetch origin main
           git reset --hard origin/main
 
