@@ -42,7 +42,7 @@ export async function sendOtp(phone: string) {
   const response = await fetch(SMSIR_VERIFY_URL, {
     method: "POST",
     headers: { "content-type": "application/json", "x-api-key": apiKey },
-    body: JSON.stringify({ mobile: phone, templateId: TEMPLATE_ID, parameters: [{ name: "Code", value: code }] }),
+    body: JSON.stringify({ mobile: phone, templateId: TEMPLATE_ID, parameters: [{ name: "CODE", value: code }] }),
     signal: AbortSignal.timeout(15000),
     cache: "no-store",
   });
