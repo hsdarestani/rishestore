@@ -126,8 +126,33 @@ export async function requireAdmin() {
 export function assertSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
   if (!origin) return;
-  const expected = new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").origin;
-  if (origin !== expected) throw new Error("INVALID_ORIGIN");
+
+  let parsed: URL;
+  try {
+    parsed = new URL(origin);
+  } catch {
+    throw new Error("INVALID_ORIGIN");
+  }
+
+  const forwardedHost = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+
+  if (forwardedHost && parsed.host.toLowerCase() === forwardedHost) return;
+
+  const allowed = new Set<string>([
+    "https://rishe.store",
+    "https://www.rishe.store",
+    "https://new.rishe.store",
+  ]);
+
+  const configured = process.env.NEXT_PUBLIC_SITE_URL;
+  if (configured) {
+    try { allowed.add(new URL(configured).origin); } catch {}
+  }
+
+  if (!allowed.has(parsed.origin)) throw new Error("INVALID_ORIGIN");
 }
 
 export function normalizeIdentity(phone: string) {

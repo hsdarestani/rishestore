@@ -98,7 +98,7 @@ jobs:
           if [ ! -f .env ]; then
             POSTGRES_PASSWORD="$(openssl rand -hex 20)"
             APP_SECRET="$(openssl rand -hex 32)"
-            printf 'POSTGRES_PASSWORD=%s\nAPP_SECRET=%s\nNEXT_PUBLIC_SITE_URL=https://new.rishe.store\n' "$POSTGRES_PASSWORD" "$APP_SECRET" > .env
+            printf 'POSTGRES_PASSWORD=%s\nAPP_SECRET=%s\nNEXT_PUBLIC_SITE_URL=https://rishe.store\n' "$POSTGRES_PASSWORD" "$APP_SECRET" > .env
             chmod 600 .env
           fi
 
@@ -120,7 +120,8 @@ jobs:
           TAX_API_TOKEN="$(printf '%s' "$TAX_TOKEN_B64" | base64 -d)"
           SMSIR_API="$(printf '%s' "$SMSIR_API_B64" | base64 -d)"
 
-          sed -i '/^ZIBAL_MERCHANT=/d;/^BALE_BOT_TOKEN=/d;/^BALE_ADMIN_CHAT_ID=/d;/^BALE_WEBHOOK_SECRET=/d;/^TAX_SUBMIT_ENDPOINT=/d;/^TAX_API_TOKEN=/d;/^SMSIR_API=/d' .env
+          sed -i '/^NEXT_PUBLIC_SITE_URL=/d;/^ZIBAL_MERCHANT=/d;/^BALE_BOT_TOKEN=/d;/^BALE_ADMIN_CHAT_ID=/d;/^BALE_WEBHOOK_SECRET=/d;/^TAX_SUBMIT_ENDPOINT=/d;/^TAX_API_TOKEN=/d;/^SMSIR_API=/d' .env
+          printf 'NEXT_PUBLIC_SITE_URL=https://rishe.store\n' >> .env
           printf 'ZIBAL_MERCHANT=%s\n' "$ZIBAL_MERCHANT" >> .env
           printf 'BALE_BOT_TOKEN=%s\n' "$BALE_BOT_TOKEN" >> .env
           printf 'BALE_ADMIN_CHAT_ID=%s\n' "$BALE_ADMIN_CHAT_ID" >> .env
@@ -208,7 +209,7 @@ jobs:
         run: |
           HEALTHY=0
           for i in $(seq 1 20); do
-            if curl -fsS --max-time 10 https://new.rishe.store/api/health | grep -q '"ok":true'; then
+            if curl -fsS --max-time 10 https://rishe.store/api/health | grep -q '"ok":true'; then
               HEALTHY=1
               break
             fi
@@ -216,7 +217,7 @@ jobs:
           done
           if [ "$HEALTHY" -ne 1 ]; then
             echo "Public health check failed"
-            curl -vk --max-time 10 https://new.rishe.store/api/health || true
+            curl -vk --max-time 10 https://rishe.store/api/health || true
             exit 1
           fi
           echo "Rishe Store public health check passed."
@@ -224,7 +225,7 @@ jobs:
           echo "Checking core public routes..."
           ROUTES="/ /shop /packs /faq /shipping /returns /contact /login /cart /order-tracking /magazine /about /category/legumes /category/rice /product/natural-honey /robots.txt /sitemap.xml"
           for route in $ROUTES; do
-            code="$(curl -LsS --max-time 15 -o /tmp/rishe-route.html -w '%{http_code}' "https://new.rishe.store$route" || true)"
+            code="$(curl -LsS --max-time 15 -o /tmp/rishe-route.html -w '%{http_code}' "https://rishe.store$route" || true)"
             case "$code" in
               200|204) echo "OK $code $route" ;;
               *)

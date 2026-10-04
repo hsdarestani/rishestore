@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL || "https://new.rishe.store").replace(/\/$/, "");
+  const base = (process.env.NEXT_PUBLIC_SITE_URL || "https://rishe.store").replace(/\/$/, "");
   const [products, categories, posts, pages] = await Promise.all([
     db.product.findMany({ where: { active: true }, select: { slug: true, updatedAt: true } }),
     db.category.findMany({ select: { slug: true } }),
