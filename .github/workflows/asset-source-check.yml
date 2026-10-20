@@ -1,0 +1,36 @@
+name: Check legacy Rishe asset source
+on:
+  push:
+    branches: [ops/asset-recovery-20261020]
+    paths: ['.github/workflows/asset-source-check.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Inspect old Rishe host (read-only)
+        env:
+          HOST: ${{ secrets.HOST }}
+          PASS: ${{ secrets.PASS }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          test -n "$HOST"
+          test -n "$PASS"
+          sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+          export SSHPASS="$PASS"
+          USER="${SSH_USER:-root}"
+          sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 "$USER@$HOST" 'bash -s' <<'REMOTE'
+          set -eu
+          echo "=== old host ==="
+          hostname
+          hostname -I
+          echo "=== app assets ==="
+          if [ -d /opt/rishestore/public/brand ]; then find /opt/rishestore/public/brand -maxdepth 2 -type f | head -20; fi
+          cd /opt/rishestore
+          docker compose ps || true
+          docker compose exec -T app sh -c 'find /app/public/brand -type f | wc -l; ls -l /app/public/brand/fonts /app/public/brand/products | head -30' || true
+          echo "=== old Caddy ==="
+          docker compose exec -T caddy wget -qO- http://app:3000/api/health || true
+          REMOTE
