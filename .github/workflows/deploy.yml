@@ -48,8 +48,16 @@ jobs:
           TAX_ENDPOINT_B64="$(printf '%s' "$TAX_SUBMIT_ENDPOINT" | base64 -w0)"
           TAX_TOKEN_B64="$(printf '%s' "$TAX_API_TOKEN" | base64 -w0)"
           SMSIR_API_B64="$(printf '%s' "$SMSIR_API" | base64 -w0)"
-          sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 "$USER_NAME@$HOST" "export ZIBAL_MERCHANT_B64='$ZIBAL_B64' BALE_TOKEN_B64='$BALE_TOKEN_B64' BALE_CHAT_B64='$BALE_CHAT_B64' BALE_WEBHOOK_B64='$BALE_WEBHOOK_B64' TAX_ENDPOINT_B64='$TAX_ENDPOINT_B64' TAX_TOKEN_B64='$TAX_TOKEN_B64' SMSIR_API_B64='$SMSIR_API_B64'; bash -s" <<'REMOTE'
+          sshpass -e ssh -p 9011 -o StrictHostKeyChecking=no -o ConnectTimeout=20 "$USER_NAME@$HOST" "export ZIBAL_MERCHANT_B64='$ZIBAL_B64' BALE_TOKEN_B64='$BALE_TOKEN_B64' BALE_CHAT_B64='$BALE_CHAT_B64' BALE_WEBHOOK_B64='$BALE_WEBHOOK_B64' TAX_ENDPOINT_B64='$TAX_ENDPOINT_B64' TAX_TOKEN_B64='$TAX_TOKEN_B64' SMSIR_API_B64='$SMSIR_API_B64'; bash -s" <<'REMOTE'
           set -euo pipefail
+          # Shared VPS: abort before package install, Docker changes, or migration
+          # unless the exact expected host is connected.
+          case " $(hostname -I) " in
+            *" 143.20.60.195 "*) : ;;
+            *) echo "Wrong host: refusing deployment"; exit 1 ;;
+          esac
+          exec 9>/var/lock/pars-vds-bot-deploy.lock
+          flock -w 600 9
 
           if ! command -v git >/dev/null 2>&1; then
             apt-get update
