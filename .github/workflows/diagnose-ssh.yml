@@ -123,3 +123,37 @@ jobs:
           echo '=== compose files ==='
           find "$dir" -maxdepth 1 \( -name 'compose*' -o -name 'docker-compose*' -o -name 'Dockerfile*' \) -printf '%f\n'
           REMOTE
+
+      - name: Inspect existing deployment script and Compose structure
+        env:
+          HOST: ${{ secrets.HOST }}
+          PASS: ${{ secrets.PASS }}
+        run: |
+          export SSHPASS="$PASS"
+          sshpass -e ssh -p 9011 -o StrictHostKeyChecking=no -o ConnectTimeout=12 "root@$HOST" 'bash -s' <<'REMOTE'
+          set -e
+          echo '=== deploy script commands (sensitive assignments redacted) ==='
+          python3 - <<'PY'
+          import re
+          for n,line in enumerate(open('/opt/rishestore-pars/deploy.sh'),1):
+              s=line.rstrip()
+              if re.search(r'(?i)(password|api.key|api_token|secret|private.key|telegram_token|zibal_merchant|SMSIR_API)',s):
+                  print(f'{n:03}: [sensitive line withheld]')
+              else:
+                  print(f'{n:03}: {s[:210]}')
+          PY
+          echo '=== compose structural lines ==='
+          python3 - <<'PY'
+          import re
+          for n,line in enumerate(open('/opt/rishestore-pars/compose.yml'),1):
+              s=line.rstrip()
+              if re.search(r'(?i)(password|api.key|api_token|secret|private.key|telegram_token|zibal_merchant|SMSIR_API)',s):
+                  print(f'{n:03}: [sensitive line withheld]')
+              else:
+                  print(f'{n:03}: {s[:190]}')
+          PY
+          echo '=== Docker images footprint ==='
+          docker images --format '{{.Repository}} {{.Tag}} {{.Size}}' | grep -Ei 'rishe|postgres|node' | head -15
+          echo '=== disk consumption ==='
+          du -sh /opt/rishestore-pars /var/lib/docker 2>/dev/null || true
+          REMOTE
