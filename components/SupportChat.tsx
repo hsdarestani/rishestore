@@ -82,9 +82,9 @@ export default function SupportChat({ phone, whatsapp, bale }: { phone?: string;
         {bale && <a href={bale} target="_blank" rel="noreferrer">بله</a>}
       </div>
       <div className="support-chat-messages" ref={box}>
-        {!messages.length && <div className="chat-message admin">سلام! درباره خرید، سفارش یا محصول سوالی دارید همین‌جا پیام بدهید.</div>}
+        {!messages.length && <div className="chat-message admin">سلام! برای آشنایی با محصولات یا پیگیری سفارش‌های قبلی پیام بدهید. خریدهای جدید در باسلام انجام می‌شود.</div>}
         {messages.map((m) => <div key={m.id} className={"chat-message " + (m.sender === "user" ? "user" : "admin")}>{m.text}</div>)}
-        {!configured && <div className="chat-message system">پاسخ آنلاین در دسترس نیست؛ از واتس‌اپ، بله یا تماس تلفنی استفاده کنید.</div>}
+        {!configured && <div className="chat-message system">برای پاسخ سریع‌تر می‌توانید از راه‌های ارتباطی بالای پنجره استفاده کنید.</div>}
       </div>
       <form onSubmit={send}><input value={text} onChange={(e) => setText(e.target.value)} placeholder="پیام خود را بنویسید…" maxLength={1200} /><button disabled={busy}>{busy ? "…" : "ارسال"}</button></form>
       {error && <small>{error}</small>}

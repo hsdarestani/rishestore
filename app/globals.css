@@ -889,3 +889,14 @@ label{font-size:14px}
   .checkout-next{width:100%}
   .checkout-easy .order-summary{position:static}
 }
+
+
+/* Public storefront content readability and editorial headings */
+.trust-cards article p{font-size:clamp(17px,1.45vw,19px)!important;line-height:2.05}
+.about-values article p,.category-card p,.home-story-copy p,.article-card p{font-size:clamp(15px,1.2vw,17px)!important;line-height:2}
+.section-heading>p,.page-hero>p,.home-poem p,.product-info .lead{font-size:clamp(16px,1.35vw,19px)!important;line-height:2.05}
+.home-magazine-heading h2,.magazine-title{font-size:clamp(44px,5.8vw,76px)!important;line-height:1.35}
+.home-magazine-heading p{font-size:clamp(16px,1.5vw,19px)}
+.product-buy-channel{font-size:15px;color:#434c61;font-weight:800}
+.basalam-status{border:1px solid #e7d6a2;background:#fff9e9;border-radius:14px;padding:16px;margin:12px 0;color:#66531d;font-size:16px}
+@media(max-width:650px){.trust-cards article p{font-size:17px!important}.home-magazine-heading h2,.magazine-title{font-size:clamp(40px,11vw,58px)!important}}

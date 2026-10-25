@@ -6,7 +6,7 @@ import ProductCard from "@/components/ProductCard";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "فروشگاه", description: "همه محصولات ریشه؛ حبوبات، برنج، چای، عسل، غلات و چاشنی‌ها." };
 
-export default async function ShopPage({ searchParams }: { searchParams: Promise<{ q?: string; category?: string }> }) {
+export default async function ShopPage({ searchParams }: { searchParams: Promise<{ q?: string; category?: string; basalam?: string; purchase?: string }> }) {
   const params = await searchParams;
   const q = (params.q || "").trim();
   const category = (params.category || "").trim();
@@ -25,9 +25,10 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   ]);
 
   return <div className="page-shell container">
-    <header className="page-hero shop-hero"><span className="eyebrow">فروشگاه ریشه</span><h1>محصول را پیدا کن، اطلاعاتش را ببین، بعد بخر.</h1><p>دسته‌بندی ساده، جستجوی مستقیم و صفحه محصولی که اطلاعات خرید را یک‌جا نشان می‌دهد.</p>
+    <header className="page-hero shop-hero"><span className="eyebrow">فروشگاه ریشه</span><h1>محصولات ریشه</h1>
       <form className="shop-search"><input type="search" name="q" defaultValue={q} placeholder="مثلاً عدس، چای ایرانی یا برنج…" /><button className="btn btn-primary">جستجو</button></form>
     </header>
+    {params.basalam === "missing" && <p className="basalam-status" role="status">لینک غرفه باسلام هنوز در تنظیمات ریشه ثبت نشده است. برای خرید با پشتیبانی تماس بگیرید.</p>}
     <div className="category-pills"><Link className={!category ? "active" : ""} href="/shop">همه</Link>{categories.map((cat) => <Link className={category === cat.slug ? "active" : ""} key={cat.id} href={"/shop?category=" + cat.slug}>{cat.name}</Link>)}</div>
     <div className="results-head"><strong>{products.length.toLocaleString("fa-IR")} محصول</strong>{q && <span>نتیجه برای «{q}»</span>}</div>
     {products.length ? <div className="product-grid">{products.map((p) => <ProductCard key={p.id} product={p} />)}</div> : <div className="empty-state"><h2>محصولی پیدا نشد</h2><p>عبارت دیگری جستجو کن یا یکی از دسته‌ها را انتخاب کن.</p></div>}

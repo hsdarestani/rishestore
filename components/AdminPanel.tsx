@@ -7,6 +7,8 @@ import LegacyImportButton from "@/components/LegacyImportButton";
 type AdminData = any;
 type Settings = {
   storeName: string;
+  basalamStoreUrl: string;
+  basalamProductUrls: string;
   storePhone: string;
   instagramUrl: string;
   baleUrl: string;
@@ -470,7 +472,7 @@ export default function AdminPanel({ data, settings }: { data: AdminData; settin
         <div className="erp-grid-2">
           <Panel title="تنظیمات فروشگاه">
             <form className="erp-form" onSubmit={async(e)=>{e.preventDefault();await quick("/api/admin/settings","PATCH",Object.fromEntries(new FormData(e.currentTarget).entries()));}}>
-              <div className="form-grid"><label>نام فروشگاه<input name="storeName" defaultValue={settings.storeName}/></label><label>شماره تماس<input name="storePhone" defaultValue={settings.storePhone}/></label><label className="span-2">اینستاگرام<input name="instagramUrl" defaultValue={settings.instagramUrl} dir="ltr"/></label><label className="span-2">لینک بله<input name="baleUrl" defaultValue={settings.baleUrl} dir="ltr"/></label><label className="span-2">لینک واتس‌اپ<input name="whatsappUrl" defaultValue={settings.whatsappUrl} dir="ltr"/></label><label className="span-2">آدرس فروشگاه<input name="storeAddress" defaultValue={settings.storeAddress}/></label><label className="span-2">آدرس انبار<input name="warehouseAddress" defaultValue={settings.warehouseAddress}/></label><label>هزینه ثابت ارسال<input name="shippingFlatRate" type="number" min="0" defaultValue={settings.shippingFlatRate}/></label><label>ارسال رایگان از<input name="freeShippingThreshold" type="number" min="0" defaultValue={settings.freeShippingThreshold}/></label></div>
+              <div className="form-grid"><label>نام فروشگاه<input name="storeName" defaultValue={settings.storeName}/></label><label>شماره تماس<input name="storePhone" defaultValue={settings.storePhone}/></label><label className="span-2">لینک غرفه باسلام<input name="basalamStoreUrl" type="url" placeholder="https://basalam.com/..." defaultValue={settings.basalamStoreUrl} dir="ltr"/></label><label className="span-2">لینک اختصاصی محصولات (JSON با کلید اسلاگ)<textarea name="basalamProductUrls" rows={4} defaultValue={settings.basalamProductUrls} dir="ltr" placeholder='{"iranian-chickpeas":"https://basalam.com/..."}'/></label><label className="span-2">اینستاگرام<input name="instagramUrl" defaultValue={settings.instagramUrl} dir="ltr"/></label><label className="span-2">لینک بله<input name="baleUrl" defaultValue={settings.baleUrl} dir="ltr"/></label><label className="span-2">لینک واتس‌اپ<input name="whatsappUrl" defaultValue={settings.whatsappUrl} dir="ltr"/></label><label className="span-2">آدرس فروشگاه<input name="storeAddress" defaultValue={settings.storeAddress}/></label><label className="span-2">آدرس انبار<input name="warehouseAddress" defaultValue={settings.warehouseAddress}/></label><label>هزینه ثابت ارسال<input name="shippingFlatRate" type="number" min="0" defaultValue={settings.shippingFlatRate}/></label><label>ارسال رایگان از<input name="freeShippingThreshold" type="number" min="0" defaultValue={settings.freeShippingThreshold}/></label></div>
               <div className="erp-form-actions"><button className="btn btn-primary btn-sm">ذخیره تنظیمات</button></div>
             </form>
           </Panel>
