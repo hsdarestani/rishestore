@@ -73,3 +73,21 @@ jobs:
           except Exception as e:
               print("HTTP header check failed:",type(e).__name__)
           PY
+
+      - name: Verify configured SSH credentials and inspect app runtime
+        env:
+          HOST: ${{ secrets.HOST }}
+          PASS: ${{ secrets.PASS }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          sudo apt-get install -y -qq sshpass
+          export SSHPASS="$PASS"
+          sshpass -e ssh -p 9011 -o StrictHostKeyChecking=no -o ConnectTimeout=12 "${SSH_USER:-root}@$HOST" '
+            echo "SSH login successful"
+            echo "Application source directories:"
+            for dir in /opt/rishestore /opt/rishe /srv/rishestore; do test ! -d "$dir" || echo "$dir"; done
+            echo "Application containers:"
+            docker ps --format "{{.Names}} :: {{.Status}} :: {{.Ports}}" | grep -Ei "rishe|postgres|caddy" || true
+            echo "Nginx enabled sites:"
+            ls /etc/nginx/sites-enabled 2>/dev/null || true
+          '
