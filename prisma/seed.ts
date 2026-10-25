@@ -522,6 +522,8 @@ async function main() {
 
   for (const [key, value] of Object.entries({
     storeName: "ریشه",
+    basalamStoreUrl: "https://basalam.com/rishestore",
+    basalamProductUrls: "{}",
     storePhone: "",
     instagramUrl: "",
     shippingFlatRate: "0",

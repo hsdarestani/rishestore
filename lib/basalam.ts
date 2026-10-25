@@ -1,5 +1,7 @@
 import { db } from "@/lib/db";
 
+export const DEFAULT_BASALAM_STORE_URL = "https://basalam.com/rishestore";
+
 /** Prevent an open redirect through user-configurable admin URLs. */
 export function validBasalamUrl(value: unknown): string | null {
   if (typeof value !== "string" || !value.trim() || value.length > 2048) return null;
@@ -25,5 +27,5 @@ export async function getBasalamDestination(productSlug?: string): Promise<strin
       }
     } catch { /* Fall back to the profile for missing or invalid product maps. */ }
   }
-  return validBasalamUrl(settings.basalamStoreUrl);
+  return validBasalamUrl(settings.basalamStoreUrl) || DEFAULT_BASALAM_STORE_URL;
 }

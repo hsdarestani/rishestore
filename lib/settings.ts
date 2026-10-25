@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto";
 import { db } from "@/lib/db";
+import { DEFAULT_BASALAM_STORE_URL } from "@/lib/basalam";
 
 function key() {
   const secret = process.env.APP_SECRET || "";
@@ -60,7 +61,7 @@ export async function getStoreConfig() {
     storeAddress: map.storeAddress || "",
     shippingFlatRate: Number.isFinite(shippingFlatRate) ? shippingFlatRate : 0,
     freeShippingThreshold: Number.isFinite(freeShippingThreshold) ? freeShippingThreshold : 0,
-    basalamStoreUrl: map.basalamStoreUrl || "",
+    basalamStoreUrl: map.basalamStoreUrl || DEFAULT_BASALAM_STORE_URL,
     basalamProductUrls: map.basalamProductUrls || "{}",
     paymentProvider: "zibal",
     paymentReady: Boolean(String(process.env.ZIBAL_MERCHANT || "").trim()),
