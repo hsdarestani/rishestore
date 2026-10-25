@@ -86,7 +86,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         </div>
 
-        <Link className="btn btn-primary" href={basalamHref(product.slug)}>خرید این محصول در باسلام</Link>
+        <a className="btn btn-primary" href={basalamHref(product.slug)}>خرید این محصول در باسلام</a>
         <div className="micro-trust">
           <span><TagIcon size={16} />قیمت روز در باسلام</span>
           <span><ShieldIcon size={16} />اطلاعات واقعی محصول</span>

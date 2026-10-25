@@ -14,7 +14,7 @@ export default function ProductCard({product}:{product:ProductCardData}) {
       <Link href={"/product/"+product.slug}><h3>{product.name}</h3></Link>
       <p>{product.shortDescription}</p>
       <div className="product-meta"><div className="product-buy-channel">قیمت و موجودی روز در باسلام</div>{product.weightGrams?<span><ScaleIcon size={16}/>{product.weightGrams.toLocaleString("fa-IR")} گرم</span>:null}</div>
-      <Link className="btn btn-primary btn-sm" href={basalamHref(product.slug)}><SparklesIcon size={17}/>خرید از باسلام</Link>
+      <a className="btn btn-primary btn-sm" href={basalamHref(product.slug)}><SparklesIcon size={17}/>خرید از باسلام</a>
     </div>
   </article>;
 }

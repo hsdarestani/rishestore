@@ -23,7 +23,7 @@ services:
     environment:
       DATABASE_URL: postgresql://rishe:${POSTGRES_PASSWORD}@db:5432/rishe?schema=public
       APP_SECRET: ${APP_SECRET}
-      NEXT_PUBLIC_SITE_URL: https://new.rishe.store
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://rishe.store}
       ZIBAL_MERCHANT: ${ZIBAL_MERCHANT}
       ZIBAL_CALLBACK_BASE_URL: https://rishe.store
       BALE_BOT_TOKEN: ${BALE_BOT_TOKEN:-}

@@ -8,7 +8,7 @@ export default function Footer({phone,instagram,bale,whatsapp,warehouseAddress,s
     <div className="container footer-grid">
       <div className="footer-brand"><Link href="/" className="footer-logo-link" aria-label="ریشه"><img className="footer-logo" src="/brand/logo.png" alt="ریشه" loading="lazy" decoding="async"/></Link><p className="footer-slogan">مستقیم از مزرعه پدری</p></div>
       <div><h3>محصولات</h3><Link href="/shop">همه محصولات</Link><Link href="/packs">پک‌های پیشنهادی</Link><Link href="/category/legumes">حبوبات</Link><Link href="/category/tea">چای</Link><Link href="/category/honey">عسل</Link></div>
-      <div><h3>خرید از باسلام</h3><Link href={basalamHref()}>غرفه ریشه در باسلام</Link><Link href="/faq">سوالات متداول</Link><Link href="/shipping">راهنمای ارسال</Link><Link href="/returns">رسیدگی به سفارش</Link><Link href="/order-tracking">پیگیری سفارش‌های قبلی سایت</Link><Link href="/contact">تماس با ریشه</Link></div>
+      <div><h3>خرید از باسلام</h3><a href={basalamHref()}>غرفه ریشه در باسلام</a><Link href="/faq">سوالات متداول</Link><Link href="/shipping">راهنمای ارسال</Link><Link href="/returns">رسیدگی به سفارش</Link><Link href="/order-tracking">پیگیری سفارش‌های قبلی سایت</Link><Link href="/contact">تماس با ریشه</Link></div>
       <div className="footer-contact"><h3>پشتیبانی و ارتباط</h3><div className="footer-contact-actions">
         {phone&&<a href={"tel:"+phone}><strong>تماس</strong><span>{phone}</span></a>}
         {whatsapp&&<a href={whatsapp} target="_blank" rel="noreferrer"><strong>واتس‌اپ</strong><span>پیام مستقیم</span></a>}

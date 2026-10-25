@@ -22,7 +22,7 @@ export default function Header({storeName="ریشه"}:{storeName?:string}) {
       <nav className={open?"main-nav is-open":"main-nav"} aria-label="منوی اصلی">
         <Link href="/" className="mobile-home-link" onClick={closePanels}><HomeIcon size={20}/><span>خانه</span></Link>
         {nav.map(({href,label,Icon})=><Link key={href} href={href} onClick={closePanels}><Icon size={19}/><span>{label}</span></Link>)}
-        <Link href={basalamHref()} onClick={closePanels}><SparklesIcon size={19}/><span>خرید از باسلام</span></Link>
+        <a href={basalamHref()} onClick={closePanels}><SparklesIcon size={19}/><span>خرید از باسلام</span></a>
       </nav>
       <div className="header-actions">
         <form action="/shop" className="header-search"><SearchIcon size={18}/><input name="q" type="search" placeholder="جستجوی محصول…" aria-label="جستجوی محصول"/></form>

@@ -48,7 +48,7 @@ export default function AboutPage() {
 
     <section className="section container about-cta">
       <div><span className="eyebrow">از روایت تا قابلمه</span><p>محصولات را بشناسید و برای خرید به غرفه ریشه در باسلام بروید.</p></div>
-      <Link className="btn btn-primary" href={basalamHref()}>خرید از باسلام</Link>
+      <a className="btn btn-primary" href={basalamHref()}>خرید از باسلام</a>
     </section>
   </div>;
 }

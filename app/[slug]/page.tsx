@@ -80,7 +80,7 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
         {slug === "shipping" && <><h3>آماده خریدی؟</h3><p>هزینه و زمان ارسال در باسلام نمایش داده می‌شود.</p></>}
         {slug === "returns" && <><h3>سفارشی برای بررسی داری؟</h3><p>برای سفارش‌های باسلام از بخش سفارش‌های همان پلتفرم اقدام کنید؛ برای سفارش‌های قبلی سایت با ریشه تماس بگیرید.</p></>}
         {!["shipping","returns"].includes(slug) && <><h3>محصولات را ببین</h3><p>مشخصات محصولات را ببینید و خرید را در باسلام انجام دهید.</p></>}
-        <Link className="btn btn-primary btn-wide" href={cta.href}>{cta.label}</Link>
+        <a className="btn btn-primary btn-wide" href={cta.href}>{cta.label}</a>
         <Link className="text-link" href="/faq">سوالات متداول</Link>
       </aside>
     </div>

@@ -36,7 +36,7 @@ export default async function HomePage() {
             <h1>روایتِ اصالت،<br/><em>مستقیم از مزرعه پدری</em></h1>
             <p>ما در «ریشه»، کیفیت را فدای ظاهر نمی‌کنیم. هر محصول پیش از رسیدن به دست شما، در آشپزخانه ما پخته و سنجیده می‌شود تا طعم واقعی و بی‌آلایش محصولات را به سفره بیاورید.</p>
             <div className="hero-actions">
-              <Link className="btn btn-primary" href={basalamHref()}><SparklesIcon size={19} />خرید محصولات در باسلام</Link>
+              <a className="btn btn-primary" href={basalamHref()}><SparklesIcon size={19} />خرید محصولات در باسلام</a>
               <Link className="btn btn-ghost" href="/about"><ArrowLeftIcon size={18} />روایت دست‌چین‌ها را بخوانید</Link>
             </div>
             <div className="trust-strip">
@@ -84,7 +84,7 @@ export default async function HomePage() {
               <h2>محصولات ریشه</h2>
 
             </div>
-            <Link href={basalamHref()}>خرید از باسلام ←</Link>
+            <a href={basalamHref()}>خرید از باسلام ←</a>
           </div>
           <div className="product-grid">{leadProducts.map((p) => <ProductCard key={p.id} product={p} />)}</div>
         </div>
@@ -114,7 +114,7 @@ export default async function HomePage() {
             {leadProducts.map((product, index) => {
               const legacy = product.legacyContent as any;
               const hero = legacy?.hero || {};
-              return <Link key={product.id} href={basalamHref(product.slug)} className="home-story-card">
+              return <a key={product.id} href={basalamHref(product.slug)} className="home-story-card">
                 <span className="home-story-index">۱۱ / {String(index + 1).padStart(2, "0")}</span>
                 <div className="home-story-image">{product.image ? <SafeProductImage src={product.image} alt={product.name} fallback="تصویر این محصول هنوز اضافه نشده است" /> : <div className="product-fallback">ر</div>}</div>
                 <div className="home-story-copy">
@@ -124,7 +124,7 @@ export default async function HomePage() {
                   {text(hero.story) && <p><b>روایت تامین:</b> {hero.story}</p>}
                   <span className="home-story-buy">خرید از باسلام <ArrowLeftIcon size={17} /></span>
                 </div>
-              </Link>;
+              </a>;
             })}
           </div>
         </div>
@@ -144,7 +144,7 @@ export default async function HomePage() {
 
       <section className="section container final-cta">
         <div><h2>محصولاتی که عیار پختشان در ریشه تست شده است.</h2><p>برای خرید اول، محصولاتی را انتخاب کن که هم پرمصرف‌اند، هم کیفیت پختشان در ریشه تست شده است.</p></div>
-        <Link className="btn btn-primary" href={basalamHref()}>خرید از غرفه ریشه در باسلام</Link>
+        <a className="btn btn-primary" href={basalamHref()}>خرید از غرفه ریشه در باسلام</a>
       </section>
     </>
   );
