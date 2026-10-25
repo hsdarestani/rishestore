@@ -157,3 +157,21 @@ jobs:
           echo '=== disk consumption ==='
           du -sh /opt/rishestore-pars /var/lib/docker 2>/dev/null || true
           REMOTE
+
+      - name: Check disk budget and reusable Docker image space
+        env:
+          HOST: ${{ secrets.HOST }}
+          PASS: ${{ secrets.PASS }}
+        run: |
+          export SSHPASS="$PASS"
+          sshpass -e ssh -p 9011 -o StrictHostKeyChecking=no -o ConnectTimeout=12 "root@$HOST" 'bash -s' <<'REMOTE'
+          set -e
+          echo '=== docker system df ==='
+          docker system df
+          echo '=== volumes ==='
+          docker volume ls --format '{{.Name}}' | grep rishestore | head -15
+          echo '=== disk top dirs ==='
+          du -sh /var/cache/apt /var/log /var/lib/docker/overlay2 /opt /root/.cache /tmp 2>/dev/null || true
+          echo '=== data backup size estimate ==='
+          docker exec rishestore_pars-db-1 psql -U rishe -d rishe -Atc "SELECT pg_size_pretty(pg_database_size('rishe'));" || true
+          REMOTE
