@@ -60,6 +60,8 @@ export async function getStoreConfig() {
     storeAddress: map.storeAddress || "",
     shippingFlatRate: Number.isFinite(shippingFlatRate) ? shippingFlatRate : 0,
     freeShippingThreshold: Number.isFinite(freeShippingThreshold) ? freeShippingThreshold : 0,
+    basalamStoreUrl: map.basalamStoreUrl || "",
+    basalamProductUrls: map.basalamProductUrls || "{}",
     paymentProvider: "zibal",
     paymentReady: Boolean(String(process.env.ZIBAL_MERCHANT || "").trim()),
   };
