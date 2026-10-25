@@ -39,3 +39,37 @@ jobs:
           except Exception as e:
               print('Public health fetch failed:',type(e).__name__)
           PY
+
+      - name: Distinguish CDN frontend from origin and test alternate owned hostname
+        env:
+          HOST: ${{ secrets.HOST }}
+        run: |
+          python3 - <<'PY'
+          import os,socket,ipaddress,urllib.request
+          host=os.environ["HOST"]
+          try:
+              ipaddress.ip_address(host)
+              print("Secret HOST is literal IP:", True)
+          except ValueError:
+              print("Secret HOST is literal IP:", False)
+              print("Secret HOST is main domain:", host=="rishe.store")
+          for name in ["rishe.store","www.rishe.store","new.rishe.store"]:
+              try:
+                  addresses={x[4][0] for x in socket.getaddrinfo(name,None)}
+                  print(name,"DNS exists:", bool(addresses))
+                  for port in [22,2222,2200]:
+                      try:
+                          conn=socket.create_connection((name,port),timeout=1.5)
+                          conn.close()
+                          print(name,"SSH port",port,": OPEN")
+                      except Exception:
+                          pass
+              except Exception as e:
+                  print(name,"DNS failed:", type(e).__name__)
+          try:
+              response=urllib.request.urlopen("https://rishe.store/api/health",timeout=10)
+              print("Public HTTP Server:",response.headers.get("Server","unknown"))
+              print("Public CF-ray header present:",bool(response.headers.get("Cf-Ray")))
+          except Exception as e:
+              print("HTTP header check failed:",type(e).__name__)
+          PY
