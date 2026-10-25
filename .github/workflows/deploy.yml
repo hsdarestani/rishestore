@@ -1,238 +1,121 @@
-name: Deploy Rishe Store
-
+name: Deploy Rishe on Pars VPS
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
+permissions:
+  contents: read
 concurrency:
   group: rishe-production
   cancel-in-progress: false
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
-      - name: Validate deployment secrets
+      - uses: actions/checkout@v4
+      - name: Check isolated app and SSH connection
         env:
           HOST: ${{ secrets.HOST }}
           PASS: ${{ secrets.PASS }}
-          ZIBAL_MERCHANT: ${{ secrets.ZIBAL_MERCHANT }}
         run: |
-          test -n "$HOST" || (echo "HOST secret is missing" && exit 1)
-          test -n "$PASS" || (echo "PASS secret is missing" && exit 1)
-          test -n "$ZIBAL_MERCHANT" || (echo "ZIBAL_MERCHANT secret is missing" && exit 1)
-
-      - name: Install SSH helper
-        run: sudo apt-get update && sudo apt-get install -y sshpass
-
-      - name: Deploy to server
-        env:
-          HOST: ${{ secrets.HOST }}
-          PASS: ${{ secrets.PASS }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          ZIBAL_MERCHANT: ${{ secrets.ZIBAL_MERCHANT }}
-          BALE_BOT_TOKEN: ${{ secrets.BALE_BOT_TOKEN }}
-          BALE_ADMIN_CHAT_ID: ${{ secrets.BALE_ADMIN_CHAT_ID }}
-          BALE_WEBHOOK_SECRET: ${{ secrets.BALE_WEBHOOK_SECRET }}
-          TAX_SUBMIT_ENDPOINT: ${{ secrets.TAX_SUBMIT_ENDPOINT }}
-          TAX_API_TOKEN: ${{ secrets.TAX_API_TOKEN }}
-          SMSIR_API: ${{ secrets.SMSIR_API }}
-        run: |
-          USER_NAME="${SSH_USER:-root}"
-          export SSHPASS="$PASS"
-          ZIBAL_B64="$(printf '%s' "$ZIBAL_MERCHANT" | base64 -w0)"
-          BALE_TOKEN_B64="$(printf '%s' "$BALE_BOT_TOKEN" | base64 -w0)"
-          BALE_CHAT_B64="$(printf '%s' "$BALE_ADMIN_CHAT_ID" | base64 -w0)"
-          BALE_WEBHOOK_B64="$(printf '%s' "$BALE_WEBHOOK_SECRET" | base64 -w0)"
-          TAX_ENDPOINT_B64="$(printf '%s' "$TAX_SUBMIT_ENDPOINT" | base64 -w0)"
-          TAX_TOKEN_B64="$(printf '%s' "$TAX_API_TOKEN" | base64 -w0)"
-          SMSIR_API_B64="$(printf '%s' "$SMSIR_API" | base64 -w0)"
-          sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 "$USER_NAME@$HOST" "export ZIBAL_MERCHANT_B64='$ZIBAL_B64' BALE_TOKEN_B64='$BALE_TOKEN_B64' BALE_CHAT_B64='$BALE_CHAT_B64' BALE_WEBHOOK_B64='$BALE_WEBHOOK_B64' TAX_ENDPOINT_B64='$TAX_ENDPOINT_B64' TAX_TOKEN_B64='$TAX_TOKEN_B64' SMSIR_API_B64='$SMSIR_API_B64'; bash -s" <<'REMOTE'
           set -euo pipefail
-
-          if ! command -v git >/dev/null 2>&1; then
-            apt-get update
-            apt-get install -y git curl ca-certificates openssl
-          fi
-
-          if ! command -v docker >/dev/null 2>&1; then
-            curl -fsSL https://get.docker.com | sh
-          fi
-
-          if command -v ufw >/dev/null 2>&1 && ufw status | grep -q "Status: active"; then
-            ufw allow 80/tcp || true
-            ufw allow 443/tcp || true
-            ufw allow 443/udp || true
-          fi
-
-          APP_DIR=/opt/rishestore
-          if [ ! -d "$APP_DIR/.git" ]; then
-            rm -rf "$APP_DIR"
-            git clone https://github.com/hsdarestani/rishestore.git "$APP_DIR"
-          fi
-
-          cd "$APP_DIR"
-
-          echo "Recent payment diagnostics from the currently running app:"
-          docker compose logs --since 2h app 2>&1 | grep -E 'PAYMENT_|INVALID_ORIGIN|payment/start|zibal|Zibal' | tail -80 || true
-          OUTBOUND_IP="$(curl -4 -fsS --max-time 10 https://api.ipify.org || true)"
-          echo "Server outbound IPv4: $OUTBOUND_IP"
-
-          git fetch origin main
-          git reset --hard origin/main
-
-          MIGRATION_PRIVATE="$APP_DIR/.legacy-migration-private.pem"
-          MIGRATION_PUBLIC="$APP_DIR/.legacy-migration-public.pem"
-          if [ ! -f "$MIGRATION_PRIVATE" ]; then
-            umask 077
-            openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -out "$MIGRATION_PRIVATE" >/dev/null 2>&1
-            openssl pkey -in "$MIGRATION_PRIVATE" -pubout -out "$MIGRATION_PUBLIC" >/dev/null 2>&1
-          elif [ ! -f "$MIGRATION_PUBLIC" ]; then
-            openssl pkey -in "$MIGRATION_PRIVATE" -pubout -out "$MIGRATION_PUBLIC" >/dev/null 2>&1
-          fi
-          echo "LEGACY_MIGRATION_PUBLIC_KEY_BEGIN"
-          cat "$MIGRATION_PUBLIC"
-          echo "LEGACY_MIGRATION_PUBLIC_KEY_END"
-
-          if [ ! -f .env ]; then
-            POSTGRES_PASSWORD="$(openssl rand -hex 20)"
-            APP_SECRET="$(openssl rand -hex 32)"
-            printf 'POSTGRES_PASSWORD=%s\nAPP_SECRET=%s\nNEXT_PUBLIC_SITE_URL=https://rishe.store\n' "$POSTGRES_PASSWORD" "$APP_SECRET" > .env
-            chmod 600 .env
-          fi
-
-          ZIBAL_MERCHANT="$(printf '%s' "$ZIBAL_MERCHANT_B64" | base64 -d)"
-
-          echo "Direct Zibal API diagnostic:"
-          ZIBAL_DIAG="$(curl -4 -sS --max-time 20 https://gateway.zibal.ir/v1/request \
-            -H 'content-type: application/json' \
-            --data-binary "$(printf '{"merchant":"%s","amount":10000,"callbackUrl":"https://rishe.store/api/payment/callback","description":"Rishe gateway diagnostic"}' "$ZIBAL_MERCHANT")" || true)"
-          ZIBAL_DIAG_CODE="$(printf '%s' "$ZIBAL_DIAG" | sed -n 's/.*"result"[[:space:]]*:[[:space:]]*\([0-9-]*\).*/\1/p' | head -1)"
-          ZIBAL_DIAG_MSG="$(printf '%s' "$ZIBAL_DIAG" | sed -n 's/.*"message"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
-          echo "Zibal direct result: ${ZIBAL_DIAG_CODE:-unknown}"
-          if [ -n "$ZIBAL_DIAG_MSG" ]; then echo "Zibal direct message: $ZIBAL_DIAG_MSG"; fi
-
-          BALE_BOT_TOKEN="$(printf '%s' "$BALE_TOKEN_B64" | base64 -d)"
-          BALE_ADMIN_CHAT_ID="$(printf '%s' "$BALE_CHAT_B64" | base64 -d)"
-          BALE_WEBHOOK_SECRET="$(printf '%s' "$BALE_WEBHOOK_B64" | base64 -d)"
-          TAX_SUBMIT_ENDPOINT="$(printf '%s' "$TAX_ENDPOINT_B64" | base64 -d)"
-          TAX_API_TOKEN="$(printf '%s' "$TAX_TOKEN_B64" | base64 -d)"
-          SMSIR_API="$(printf '%s' "$SMSIR_API_B64" | base64 -d)"
-
-          sed -i '/^NEXT_PUBLIC_SITE_URL=/d;/^ZIBAL_MERCHANT=/d;/^BALE_BOT_TOKEN=/d;/^BALE_ADMIN_CHAT_ID=/d;/^BALE_WEBHOOK_SECRET=/d;/^TAX_SUBMIT_ENDPOINT=/d;/^TAX_API_TOKEN=/d;/^SMSIR_API=/d' .env
-          printf 'NEXT_PUBLIC_SITE_URL=https://rishe.store\n' >> .env
-          printf 'ZIBAL_MERCHANT=%s\n' "$ZIBAL_MERCHANT" >> .env
-          printf 'BALE_BOT_TOKEN=%s\n' "$BALE_BOT_TOKEN" >> .env
-          printf 'BALE_ADMIN_CHAT_ID=%s\n' "$BALE_ADMIN_CHAT_ID" >> .env
-          printf 'BALE_WEBHOOK_SECRET=%s\n' "$BALE_WEBHOOK_SECRET" >> .env
-          printf 'TAX_SUBMIT_ENDPOINT=%s\n' "$TAX_SUBMIT_ENDPOINT" >> .env
-          printf 'TAX_API_TOKEN=%s\n' "$TAX_API_TOKEN" >> .env
-          printf 'SMSIR_API=%s\n' "$SMSIR_API" >> .env
-          chmod 600 .env
-          unset ZIBAL_MERCHANT BALE_BOT_TOKEN BALE_ADMIN_CHAT_ID BALE_WEBHOOK_SECRET TAX_SUBMIT_ENDPOINT TAX_API_TOKEN SMSIR_API ZIBAL_MERCHANT_B64 BALE_TOKEN_B64 BALE_CHAT_B64 BALE_WEBHOOK_B64 TAX_ENDPOINT_B64 TAX_TOKEN_B64 SMSIR_API_B64
-
-          docker compose up -d --build --remove-orphans
-
-          echo "Waiting for application health..."
-          HEALTHY=0
-          for i in $(seq 1 30); do
-            if docker compose exec -T app wget -qO- http://127.0.0.1:3000/api/health </dev/null 2>/dev/null | grep -q '"ok":true'; then
-              HEALTHY=1
-              break
-            fi
-            sleep 2
-          done
-
-          if [ "$HEALTHY" -ne 1 ]; then
-            echo "Application health check failed"
-            docker compose ps
-            docker compose logs --tail=150 app worker db caddy
-            exit 1
-          fi
-
-          if ! docker compose ps worker | grep -q "Up"; then
-            echo "Worker is not running"
-            docker compose logs --tail=150 worker
-            exit 1
-          fi
-
-          echo "Legacy migration status from application log:"
-          docker compose logs --tail=180 app | grep -E 'LEGACY_ENCRYPTED_IMPORT|LEGACY_IMPORT' || true
-
-          if [ -f "$APP_DIR/data/legacy-commerce.sql.enc" ] && [ -f "$APP_DIR/data/legacy-commerce.key.enc" ]; then
-            echo "Encrypted legacy commerce payload detected; importing..."
-            rm -f /tmp/legacy-commerce.pass /tmp/legacy-commerce.sql
-            openssl pkeyutl -decrypt               -inkey "$MIGRATION_PRIVATE"               -in "$APP_DIR/data/legacy-commerce.key.enc"               -out /tmp/legacy-commerce.pass               -pkeyopt rsa_padding_mode:oaep               -pkeyopt rsa_oaep_md:sha256
-            openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000               -in "$APP_DIR/data/legacy-commerce.sql.enc"               -out /tmp/legacy-commerce.sql               -pass file:/tmp/legacy-commerce.pass
-            docker compose cp /tmp/legacy-commerce.sql app:/tmp/legacy-commerce.sql
-            docker compose exec -T app npx tsx scripts/import-legacy-commerce.ts /tmp/legacy-commerce.sql
-            docker compose exec -T app rm -f /tmp/legacy-commerce.sql
-            rm -f /tmp/legacy-commerce.pass /tmp/legacy-commerce.sql
-            echo "Encrypted legacy commerce import completed."
-          fi
-
-          echo "Recreating Caddy after app recreation..."
-          docker compose up -d --force-recreate --no-deps caddy
-          echo "Checking registered Zibal callback host:"
-          ROOT_CODE="$(curl -LsS --max-time 15 -o /tmp/rishe-root-health -w '%{http_code}' https://rishe.store/api/health || true)"
-          echo "rishe.store health HTTP: $ROOT_CODE"
-          sleep 3
-
-          echo "Checking Caddy to app connectivity..."
-          PROXY_UPSTREAM_OK=0
-          for i in $(seq 1 10); do
-            if docker compose exec -T caddy wget -qO- http://app:3000/api/health </dev/null 2>/dev/null | grep -q '"ok":true'; then
-              PROXY_UPSTREAM_OK=1
-              break
-            fi
-            sleep 2
-          done
-          if [ "$PROXY_UPSTREAM_OK" -ne 1 ]; then
-            echo "Caddy cannot reach app:3000"
-            docker compose ps
-            docker compose logs --tail=120 app caddy
-            exit 1
-          fi
-
-          echo "Caddy self probe:"
-          docker compose exec -T caddy wget --no-check-certificate --header="Host: new.rishe.store" -S -O- https://127.0.0.1/api/health </dev/null || true
-          echo "Caddy logs:"
-          docker compose logs --tail=160 caddy
-
-          docker image prune -f
-          docker compose ps
-          echo "Rishe Store internal health check passed."
+          sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+          export SSHPASS="$PASS"
+          sshpass -e ssh -p 9011 -o StrictHostKeyChecking=no -o ConnectTimeout=15 "root@$HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          case " $(hostname -I) " in *" 143.20.60.195 "*) ;; *) echo "Wrong VPS"; exit 1;; esac
+          test -f /opt/rishestore-pars/compose.yml
+          docker ps --format '{{.Names}}' | grep -Fxq rishestore_pars-app-1
+          docker ps --format '{{.Names}}' | grep -Fxq rishestore_pars-db-1
+          curl -fsS --max-time 8 http://127.0.0.1:3108/api/health | grep -q '"ok":true'
           REMOTE
-
-      - name: Verify public site
+      - name: Build release using matching Alpine platform
         run: |
-          HEALTHY=0
-          for i in $(seq 1 20); do
-            if curl -fsS --max-time 10 https://rishe.store/api/health | grep -q '"ok":true'; then
-              HEALTHY=1
-              break
-            fi
-            sleep 3
+          set -euo pipefail
+          docker build -t rishe-release:"$GITHUB_SHA" .
+          cid="$(docker create rishe-release:"$GITHUB_SHA")"
+          trap 'docker rm -f "$cid" >/dev/null 2>&1 || true' EXIT
+          mkdir -p payload/prisma
+          for part in .next app components lib; do docker cp "$cid:/app/$part" "payload/$part"; done
+          docker cp "$cid:/app/prisma/seed.ts" payload/prisma/seed.ts
+          docker run --rm --entrypoint node rishe-release:"$GITHUB_SHA" -e '["next","react","@prisma/client","tsx"].forEach(p=>console.log(p+"="+require(p+"/package.json").version))' > payload/versions.txt
+          tar -C payload -czf /tmp/rishe-update.tgz .
+          du -h /tmp/rishe-update.tgz
+      - name: Transfer small patch to isolated app directory
+        env:
+          HOST: ${{ secrets.HOST }}
+          PASS: ${{ secrets.PASS }}
+        run: |
+          set -euo pipefail
+          export SSHPASS="$PASS"
+          cat /tmp/rishe-update.tgz | sshpass -e ssh -p 9011 -o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ConnectTimeout=15 "root@$HOST" "set -e; mkdir -p /opt/rishestore-pars/.updates/$GITHUB_SHA; tar -xz -C /opt/rishestore-pars/.updates/$GITHUB_SHA"
+      - name: Back up and upgrade Rishe without touching Nginx or other services
+        env:
+          HOST: ${{ secrets.HOST }}
+          PASS: ${{ secrets.PASS }}
+        run: |
+          set -euo pipefail
+          export SSHPASS="$PASS"
+          sshpass -e ssh -p 9011 -o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=60 -o ConnectTimeout=15 "root@$HOST" "RELEASE=$GITHUB_SHA bash -s" <<'REMOTE'
+          set -Eeuo pipefail
+          exec 9>/var/lock/pars-vds-bot-deploy.lock
+          flock -w 1200 9
+          case " $(hostname -I) " in *" 143.20.60.195 "*) ;; *) echo "Wrong server"; exit 1;; esac
+          cd /opt/rishestore-pars
+          stage="/opt/rishestore-pars/.updates/$RELEASE"
+          test -f "$stage/.next/BUILD_ID"
+          test -f "$stage/prisma/seed.ts"
+          diff -u "$stage/versions.txt" <(docker exec rishestore_pars-app-1 node -e '["next","react","@prisma/client","tsx"].forEach(p=>console.log(p+"="+require(p+"/package.json").version))')
+          free_kb="$(df -Pk / | awk 'NR==2 {print $4}')"
+          test "$free_kb" -gt 850000 || { echo 'Insufficient disk'; exit 1; }
+          umask 077
+          mkdir -p releases
+          docker exec rishestore_pars-db-1 pg_dump -U rishe -d rishe | gzip -1 > "releases/pre-update-$RELEASE.sql.gz"
+          test -s "releases/pre-update-$RELEASE.sql.gz"
+          rollback="rishe-pars:rollback-$(echo "$RELEASE" | cut -c1-12)"
+          docker tag rishe-pars:latest "$rollback"
+          cid="$(docker create rishe-pars:latest sh -c 'sleep 1800')"
+          cleanup() { docker rm -f "$cid" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          docker start "$cid" >/dev/null
+          docker exec "$cid" sh -c 'rm -rf /app/.next /app/app /app/components /app/lib'
+          for part in .next app components lib; do docker cp "$stage/$part" "$cid:/app/$part"; done
+          docker cp "$stage/prisma/seed.ts" "$cid:/app/prisma/seed.ts"
+          docker commit --change 'CMD ["sh","/app/docker-entrypoint.sh"]' "$cid" rishe-pars:basalam-release >/dev/null
+          cleanup
+          trap - EXIT
+          rollback_release() {
+            echo 'Health check failed: restoring previous Rishe image'
+            docker tag "$rollback" rishe-pars:latest
+            docker compose -f compose.yml -p rishestore_pars up -d --no-deps --force-recreate app worker || true
+          }
+          trap rollback_release ERR
+          docker tag rishe-pars:basalam-release rishe-pars:latest
+          docker compose -f compose.yml -p rishestore_pars up -d --no-deps --force-recreate app worker
+          healthy=0
+          for i in $(seq 1 90); do
+            if curl -fsS --max-time 3 http://127.0.0.1:3108/api/health 2>/dev/null | grep -q '"ok":true'; then healthy=1; break; fi
+            sleep 2
           done
-          if [ "$HEALTHY" -ne 1 ]; then
-            echo "Public health check failed"
-            curl -vk --max-time 10 https://rishe.store/api/health || true
-            exit 1
-          fi
-          echo "Rishe Store public health check passed."
-
-          echo "Checking core public routes..."
-          ROUTES="/ /shop /packs /faq /shipping /returns /contact /login /cart /order-tracking /magazine /about /category/legumes /category/rice /product/natural-honey /robots.txt /sitemap.xml"
-          for route in $ROUTES; do
-            code="$(curl -LsS --max-time 15 -o /tmp/rishe-route.html -w '%{http_code}' "https://rishe.store$route" || true)"
-            case "$code" in
-              200|204) echo "OK $code $route" ;;
-              *)
-                echo "Route check failed: $code $route"
-                head -c 1200 /tmp/rishe-route.html || true
-                exit 1
-                ;;
-            esac
-          done
-          echo "All core public routes passed."
+          test "$healthy" -eq 1
+          headers="$(curl -sS --max-time 15 -D - -o /dev/null http://127.0.0.1:3108/go/basalam)"
+          echo "$headers" | grep -iq '^HTTP/.* 307'
+          echo "$headers" | tr -d '\r' | grep -iq '^location: https://basalam.com/rishestore'
+          test "$(curl -sS -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:3108/api/orders)" = 410
+          test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3108/why-rishe)" = 404
+          nginx -t
+          echo "$RELEASE" > releases/last-verified-sha
+          rm -rf "$stage"
+          trap - ERR
+          echo "RISHE_PRODUCTION_RELEASE_VERIFIED"
+          REMOTE
+      - name: Verify public routes
+        run: |
+          set -euo pipefail
+          curl -fsS --max-time 20 https://rishe.store/api/health | grep -q '"ok":true'
+          headers="$(curl -sS --max-time 20 -D - -o /dev/null https://rishe.store/go/basalam)"
+          echo "$headers" | grep -iq '^HTTP/.* 307'
+          echo "$headers" | tr -d '\r' | grep -iq '^location: https://basalam.com/rishestore'
+          test "$(curl -sS -o /dev/null -w '%{http_code}' -X POST https://rishe.store/api/orders)" = 410
+          echo "Public website Basalam redirect and checkout closure verified"
