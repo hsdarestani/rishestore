@@ -19,12 +19,12 @@ export default async function PacksPage() {
     <header className="page-hero">
       <span className="eyebrow">پک‌های پیشنهادی ریشه</span>
       <h1>ترکیب‌های آماده برای آشپزی اصیل، صبحانه سالم و خرید راحت‌تر</h1>
-      <p>هر پک از محصولات اصلی فروشگاه ساخته شده و قیمت قبلی و قیمت ویژه آن شفاف کنار هم نمایش داده می‌شود.</p>
+
     </header>
 
     <div className="results-head">
       <strong>{packs.length.toLocaleString("fa-IR")} پک</strong>
-      <span>قیمت‌ها به تومان</span>
+      <span>قیمت و امکان سفارش در باسلام</span>
     </div>
 
     {packs.length

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { basalamHref } from "@/lib/basalam-links";
 
 export const metadata: Metadata = {
   title: "درباره ما",
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 const values = [
   { title: "انتخاب از اقلیم‌های ایران", text: "محصولات با توجه به مبدأ، کیفیت و نتیجه استفاده انتخاب و معرفی می‌شوند." },
   { title: "تست پخت پیش از عرضه", text: "ظاهر محصول تنها معیار نیست؛ کیفیت محصول در شرایط واقعی پخت هم بررسی می‌شود." },
-  { title: "اطلاعات شفاف خرید", text: "قیمت، وزن، موجودی و اطلاعات محصول پیش از خرید در همان صفحه محصول نمایش داده می‌شود." },
+  { title: "آشنایی با محصول", text: "مشخصات و روایت محصول را اینجا بخوانید و قیمت روز و ثبت سفارش را در باسلام ببینید." },
   { title: "رسیدگی به مغایرت", text: "اگر محصول با مشخصات اعلام‌شده هنگام خرید تطابق نداشت، موضوع با اطلاعات سفارش بررسی می‌شود." },
 ];
 
@@ -34,7 +35,7 @@ export default function AboutPage() {
       </div>
       <aside className="about-visual">
         <img src="/brand/hero.png" alt="محصولات و روایت ریشه" />
-        <div><strong>کیفیت، به شرط پخت</strong><span>روایت اصالت، مستقیم از مزرعه پدری</span></div>
+        <div><strong>ریشه</strong><span>مستقیم از مزرعه پدری</span></div>
       </aside>
     </section>
 
@@ -46,8 +47,8 @@ export default function AboutPage() {
     </section>
 
     <section className="section container about-cta">
-      <div><span className="eyebrow">از روایت تا قابلمه</span><h2>عیار محصول را در صفحه خودش ببین.</h2><p>شناسنامه، روایت تامین، نتیجه تست، قیمت و موجودی هر محصول در فروشگاه کنار هم قرار گرفته‌اند.</p></div>
-      <Link className="btn btn-primary" href="/shop">مشاهده محصولات</Link>
+      <div><span className="eyebrow">از روایت تا قابلمه</span><p>محصولات را بشناسید و برای خرید به غرفه ریشه در باسلام بروید.</p></div>
+      <Link className="btn btn-primary" href={basalamHref()}>خرید از باسلام</Link>
     </section>
   </div>;
 }

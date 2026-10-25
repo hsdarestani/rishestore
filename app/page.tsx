@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { basalamHref } from "@/lib/basalam-links";
 import { db } from "@/lib/db";
 import ProductCard from "@/components/ProductCard";
 import SafeProductImage from "@/components/SafeProductImage";
@@ -31,11 +32,11 @@ export default async function HomePage() {
       <section className="hero home-legacy-hero">
         <div className="container hero-grid">
           <div className="hero-copy">
-            <span className="eyebrow">کیفیت، به شرط پخت</span>
+
             <h1>روایتِ اصالت،<br/><em>مستقیم از مزرعه پدری</em></h1>
             <p>ما در «ریشه»، کیفیت را فدای ظاهر نمی‌کنیم. هر محصول پیش از رسیدن به دست شما، در آشپزخانه ما پخته و سنجیده می‌شود تا طعم واقعی و بی‌آلایش محصولات را به سفره بیاورید.</p>
             <div className="hero-actions">
-              <Link className="btn btn-primary" href="/shop"><SparklesIcon size={19} />خرید پک‌ها و محصولات پیشنهادی</Link>
+              <Link className="btn btn-primary" href={basalamHref()}><SparklesIcon size={19} />خرید محصولات در باسلام</Link>
               <Link className="btn btn-ghost" href="/about"><ArrowLeftIcon size={18} />روایت دست‌چین‌ها را بخوانید</Link>
             </div>
             <div className="trust-strip">
@@ -52,7 +53,7 @@ export default async function HomePage() {
               <img src="/brand/products/legacy-251.jpg" alt="" loading="lazy" decoding="async" />
               <img src="/brand/products/legacy-113.jpg" alt="" loading="lazy" decoding="async" />
             </div>
-            <div className="hero-note">به شرط پخت؛ اگر راضی نبودی، پس می‌گیریم</div>
+
           </div>
         </div>
       </section>
@@ -60,9 +61,9 @@ export default async function HomePage() {
       <section className="section container">
         <div className="section-heading row-heading">
           <div>
-            <span>دسترسی مستقیم و شفاف</span>
+
             <h2>ویترین حبوبات و دست‌چین‌های ریشه</h2>
-            <p>قیمت روز، وزن بسته‌بندی و شناسنامه هر محصول را بررسی کنید و با کلیک روی هر کدام، داستان زمین و عیار پخت آن را بخوانید.</p>
+
           </div>
           <Link href="/shop">همه محصولات ←</Link>
         </div>
@@ -79,11 +80,11 @@ export default async function HomePage() {
         <div className="container">
           <div className="section-heading row-heading">
             <div>
-              <span>قیمت و موجودی واقعی</span>
+              <span>محصولات دست‌چین</span>
               <h2>محصولات ریشه</h2>
-              <p>قیمت، موجودی و اطلاعات هر محصول از همان کاتالوگ عملیاتی فروشگاه خوانده می‌شود.</p>
+
             </div>
-            <Link href="/shop">رفتن به فروشگاه ←</Link>
+            <Link href={basalamHref()}>خرید از باسلام ←</Link>
           </div>
           <div className="product-grid">{leadProducts.map((p) => <ProductCard key={p.id} product={p} />)}</div>
         </div>
@@ -106,22 +107,22 @@ export default async function HomePage() {
         <div className="container">
           <div className="section-heading">
             <span>دست‌چین‌های امسال</span>
-            <h2>روایت محصولات ما</h2>
-            <p>هر محصول فقط یک کالا نیست؛ داستان خاک، تامین، تست کیفیت و عیار پخت خودش را دارد.</p>
+
+
           </div>
           <div className="home-story-grid">
             {leadProducts.map((product, index) => {
               const legacy = product.legacyContent as any;
               const hero = legacy?.hero || {};
-              return <Link key={product.id} href={"/product/" + product.slug} className="home-story-card">
+              return <Link key={product.id} href={basalamHref(product.slug)} className="home-story-card">
                 <span className="home-story-index">۱۱ / {String(index + 1).padStart(2, "0")}</span>
                 <div className="home-story-image">{product.image ? <SafeProductImage src={product.image} alt={product.name} fallback="تصویر این محصول هنوز اضافه نشده است" /> : <div className="product-fallback">ر</div>}</div>
                 <div className="home-story-copy">
                   <h3>{text(hero.display_title) || product.name}</h3>
-                  <strong>{product.price > 0 ? product.price.toLocaleString("fa-IR") + " تومان" : "قیمت در حال بروزرسانی"}</strong>
+                  <strong>قیمت و موجودی در باسلام</strong>
                   {text(hero.myth) && <p className="home-story-myth">{hero.myth}</p>}
                   {text(hero.story) && <p><b>روایت تامین:</b> {hero.story}</p>}
-                  <span className="home-story-buy">مشاهده و خرید <ArrowLeftIcon size={17} /></span>
+                  <span className="home-story-buy">خرید از باسلام <ArrowLeftIcon size={17} /></span>
                 </div>
               </Link>;
             })}
@@ -129,7 +130,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {packs.length > 0 && <section className="section section-dark"><div className="container"><div className="section-heading light"><span>پک‌ها</span><h2>چند انتخاب کنار هم، یک خرید ساده‌تر.</h2></div><div className="product-grid">{packs.map((p) => <ProductCard key={p.id} product={p} />)}</div><Link className="btn btn-light" href="/packs">همه پک‌ها</Link></div></section>}
+      {packs.length > 0 && <section className="section section-dark"><div className="container"><div className="section-heading light"><span>پک‌ها</span><h2>چند انتخاب کنار هم، یک خرید ساده‌تر.</h2></div><div className="product-grid">{packs.map((p) => <ProductCard key={p.id} product={p} />)}</div><Link className="btn btn-light" href="/packs">آشنایی با پک‌ها</Link></div></section>}
 
       {reviews.length > 0 && <section className="section container">
         <div className="section-heading"><span>اعتماد شما عیار ماست</span><h2>تجربه خریداران ریشه</h2></div>
@@ -137,13 +138,13 @@ export default async function HomePage() {
       </section>}
 
       <section className="section container">
-        <div className="section-heading row-heading"><div><span>مجله ریشه</span><h2>همه روایت‌ها و راهنماهای بلاگ</h2></div><Link href="/magazine">همه مطالب ←</Link></div>
+        <div className="section-heading row-heading home-magazine-heading"><div><h2>مجله ریشه</h2><p>همه روایت‌ها و راهنماهای بلاگ</p></div><Link href="/magazine">همه مطالب ←</Link></div>
         <div className="article-grid">{posts.map((post) => <Link key={post.id} href={"/magazine/" + post.slug} className="article-card"><span>مجله ریشه</span><h3>{post.title}</h3><p>{post.excerpt}</p><b>خواندن مطلب ←</b></Link>)}</div>
       </section>
 
       <section className="section container final-cta">
-        <div><span className="eyebrow">اول از محصولات پیشنهادی شروع کن</span><h2>محصولاتی که عیار پختشان در ریشه تست شده است.</h2><p>برای خرید اول، محصولاتی را انتخاب کن که هم پرمصرف‌اند، هم کیفیت پختشان در ریشه تست شده است.</p></div>
-        <Link className="btn btn-primary" href="/shop">رفتن به ویترین محصولات</Link>
+        <div><h2>محصولاتی که عیار پختشان در ریشه تست شده است.</h2><p>برای خرید اول، محصولاتی را انتخاب کن که هم پرمصرف‌اند، هم کیفیت پختشان در ریشه تست شده است.</p></div>
+        <Link className="btn btn-primary" href={basalamHref()}>خرید از غرفه ریشه در باسلام</Link>
       </section>
     </>
   );

@@ -20,6 +20,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...products.map((p) => ({ url: base + "/product/" + p.slug, lastModified: p.updatedAt, changeFrequency: "weekly" as const, priority: 0.8 })),
     ...categories.map((c) => ({ url: base + "/category/" + c.slug, changeFrequency: "weekly" as const, priority: 0.7 })),
     ...posts.map((p) => ({ url: base + "/magazine/" + p.slug, lastModified: p.updatedAt, changeFrequency: "monthly" as const, priority: 0.6 })),
-    ...pages.map((p) => ({ url: base + "/" + p.slug, lastModified: p.updatedAt, changeFrequency: "monthly" as const, priority: 0.5 })),
+    ...pages.filter((p) => p.slug !== "why-rishe").map((p) => ({ url: base + "/" + p.slug, lastModified: p.updatedAt, changeFrequency: "monthly" as const, priority: 0.5 })),
   ];
 }

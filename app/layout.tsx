@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   metadataBase: new URL(siteUrl),
   title: { default: "ریشه | روایت اصالت، مستقیم از مزرعه پدری", template: "%s | ریشه" },
-  description: "فروشگاه ریشه؛ محصولات دست‌چین ایرانی با تست پخت، قیمت و موجودی شفاف و روایت تامین هر محصول.",
+  description: "با محصولات دست‌چین ایرانی ریشه و داستان تأمین و کیفیت آن‌ها آشنا شوید؛ خرید از غرفه ریشه در باسلام.",
   openGraph: { type: "website", locale: "fa_IR", siteName: "ریشه", url: siteUrl },
 };
 
