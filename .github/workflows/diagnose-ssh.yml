@@ -175,3 +175,19 @@ jobs:
           echo '=== data backup size estimate ==='
           docker exec rishestore_pars-db-1 psql -U rishe -d rishe -Atc "SELECT pg_size_pretty(pg_database_size('rishe'));" || true
           REMOTE
+
+      - name: Measure existing Next.js build and dependency versions
+        env:
+          HOST: ${{ secrets.HOST }}
+          PASS: ${{ secrets.PASS }}
+        run: |
+          export SSHPASS="$PASS"
+          sshpass -e ssh -p 9011 -o StrictHostKeyChecking=no -o ConnectTimeout=12 "root@$HOST" 'bash -s' <<'REMOTE'
+          set -e
+          echo '=== existing node dependencies ==='
+          docker exec rishestore_pars-app-1 node -e 'for (const s of ["next","react","@prisma/client","tsx"]) { try {console.log(s,require(s+"/package.json").version)} catch(e){console.log(s,"unknown")} }'
+          echo '=== existing build sizes ==='
+          docker exec rishestore_pars-app-1 du -sh /app/.next /app/app /app/components /app/lib /app/prisma /app/node_modules
+          echo '=== existing image ==='
+          docker image inspect rishe-pars:latest --format '{{.Id}} | {{.Size}}'
+          REMOTE
