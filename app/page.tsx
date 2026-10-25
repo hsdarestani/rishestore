@@ -37,12 +37,12 @@ export default async function HomePage() {
             <p>ما در «ریشه»، کیفیت را فدای ظاهر نمی‌کنیم. هر محصول پیش از رسیدن به دست شما، در آشپزخانه ما پخته و سنجیده می‌شود تا طعم واقعی و بی‌آلایش محصولات را به سفره بیاورید.</p>
             <div className="hero-actions">
               <a className="btn btn-primary" href={basalamHref()}><SparklesIcon size={19} />خرید محصولات در باسلام</a>
-              <Link className="btn btn-ghost" href="/about"><ArrowLeftIcon size={18} />روایت دست‌چین‌ها را بخوانید</Link>
+              <Link className="btn btn-ghost" href="/about"><ArrowLeftIcon size={18} />درباره ریشه بخوانید</Link>
             </div>
             <div className="trust-strip">
               <span><ShieldIcon size={17} />تضمین کیفیت</span>
               <span><SparklesIcon size={17} />تست پخت قبل از عرضه</span>
-              <span><TruckIcon size={17} />ارسال سریع کرج و تهران</span>
+              <span><TruckIcon size={17} />سفارش از طریق باسلام</span>
             </div>
           </div>
 
@@ -98,7 +98,7 @@ export default async function HomePage() {
         </div>
         <div className="trust-cards">
           <article><i>۱</i><h3>تست پخت</h3><p>هر محصول قبل از عرضه در شرایط واقعی آشپزخانه سنجیده می‌شود.</p></article>
-          <article><i>۲</i><h3>قیمت شفاف</h3><p>قیمت، وزن و موجودی همان‌جا کنار محصول دیده می‌شود.</p></article>
+          <article><i>۲</i><h3>قیمت و موجودی به‌روز</h3><p>قیمت نهایی، موجودی و شرایط ارسال را پیش از خرید در باسلام بررسی کنید.</p></article>
           <article><i>۳</i><h3>انتخاب اصیل</h3><p>تأمین از اقلیم‌های مشخص و انتخاب بر اساس کیفیت واقعی، نه صرفاً ظاهر.</p></article>
         </div>
       </section>
