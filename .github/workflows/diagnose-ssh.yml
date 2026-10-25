@@ -16,7 +16,7 @@ jobs:
         run: |
           set -uo pipefail
           if [ -z "${HOST:-}" ]; then echo "HOST secret missing"; exit 1; fi
-          for port in 22 2222 2200 2022 22222 22022 8022; do
+          for port in 22 9011 2222 2200 2022 22222 22022 8022; do
             if timeout 3 bash -c 'exec 3<>/dev/tcp/"$1"/"$2"' _ "$HOST" "$port" 2>/dev/null; then
               echo "Port $port: OPEN"
             else
@@ -57,7 +57,7 @@ jobs:
               try:
                   addresses={x[4][0] for x in socket.getaddrinfo(name,None)}
                   print(name,"DNS exists:", bool(addresses))
-                  for port in [22,2222,2200]:
+                  for port in [22,9011,2222,2200]:
                       try:
                           conn=socket.create_connection((name,port),timeout=1.5)
                           conn.close()
