@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { basalamHref } from "@/lib/basalam-links";
+import { basalamProductImage } from "@/lib/basalam-product-media";
 import ProductCard from "@/components/ProductCard";
 import SafeProductImage from "@/components/SafeProductImage";
 import { ScaleIcon, ShieldIcon, TagIcon } from "@/components/Icons";
@@ -17,6 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: product.seoTitle || legacy?.hero?.display_title || product.name,
     description: product.seoDescription || legacy?.hero?.myth || product.shortDescription,
+    openGraph: { images: [basalamProductImage(product) || product.image].filter((url): url is string => Boolean(url)) },
   };
 }
 
@@ -51,12 +53,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     }),
   ]);
 
+  const displayImage = basalamProductImage(product) || product.image;
   const schema = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: text(hero.display_title) || product.name,
     description: text(hero.story) || product.shortDescription,
-    image: product.image || undefined,
+    image: displayImage || undefined,
     brand: { "@type": "Brand", name: "ریشه" },
   };
 
@@ -66,7 +69,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
     <section className="product-page">
       <div className="product-gallery">
-        <SafeProductImage src={product.image} alt={text(hero.display_title) || product.name} priority fallback="تصویر این محصول هنوز اضافه نشده است" />
+        <SafeProductImage src={displayImage} alt={text(hero.display_title) || product.name} priority fallback="تصویر این محصول هنوز اضافه نشده است" />
       </div>
 
       <div className="product-info">
