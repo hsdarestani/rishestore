@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { basalamHref } from "@/lib/basalam-links";
+import { basalamProductImage } from "@/lib/basalam-product-media";
 import { db } from "@/lib/db";
 import ProductCard from "@/components/ProductCard";
 import SafeProductImage from "@/components/SafeProductImage";
@@ -49,9 +50,9 @@ export default async function HomePage() {
           <div className="hero-art hero-photo">
             <img className="hero-main-photo" src="/brand/hero.png" alt="محصولات دست‌چین ریشه" loading="eager" decoding="async" />
             <div className="hero-product-stack" aria-hidden>
-              <img src="/brand/products/legacy-124.jpg" alt="" loading="lazy" decoding="async" />
-              <img src="/brand/products/legacy-251.jpg" alt="" loading="lazy" decoding="async" />
-              <img src="/brand/products/legacy-113.jpg" alt="" loading="lazy" decoding="async" />
+              <img src={basalamProductImage("iranian-chickpeas") || "/brand/products/legacy-124.jpg"} alt="" loading="lazy" decoding="async" />
+              <img src={basalamProductImage("gilan-tea") || "/brand/products/legacy-251.jpg"} alt="" loading="lazy" decoding="async" />
+              <img src={basalamProductImage("natural-honey") || "/brand/products/legacy-113.jpg"} alt="" loading="lazy" decoding="async" />
             </div>
 
           </div>
@@ -114,9 +115,10 @@ export default async function HomePage() {
             {leadProducts.map((product, index) => {
               const legacy = product.legacyContent as any;
               const hero = legacy?.hero || {};
+              const displayImage = basalamProductImage(product) || product.image;
               return <a key={product.id} href={basalamHref(product.slug)} className="home-story-card">
                 <span className="home-story-index">۱۱ / {String(index + 1).padStart(2, "0")}</span>
-                <div className="home-story-image">{product.image ? <SafeProductImage src={product.image} alt={product.name} fallback="تصویر این محصول هنوز اضافه نشده است" /> : <div className="product-fallback">ر</div>}</div>
+                <div className="home-story-image">{displayImage ? <SafeProductImage src={displayImage} alt={product.name} fallback="تصویر این محصول هنوز اضافه نشده است" /> : <div className="product-fallback">ر</div>}</div>
                 <div className="home-story-copy">
                   <h3>{text(hero.display_title) || product.name}</h3>
                   <strong>قیمت و موجودی در باسلام</strong>
