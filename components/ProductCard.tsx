@@ -1,13 +1,15 @@
 "use client";
 import Link from "next/link";
 import SafeProductImage from "@/components/SafeProductImage";
+import { basalamProductImage } from "@/lib/basalam-product-media";
 import { ScaleIcon, SparklesIcon } from "@/components/Icons";
 import { basalamHref } from "@/lib/basalam-links";
-type ProductCardData={id:string;slug:string;name:string;shortDescription:string;price:number;compareAt?:number|null;stock:number;kind?:"PRODUCT"|"PACK";allowBackorder?:boolean;image?:string|null;weightGrams?:number|null;category?:{name:string;slug:string}|null;};
+type ProductCardData={id:string;slug:string;legacyProductId?:number|null;name:string;shortDescription:string;price:number;compareAt?:number|null;stock:number;kind?:"PRODUCT"|"PACK";allowBackorder?:boolean;image?:string|null;weightGrams?:number|null;category?:{name:string;slug:string}|null;};
 export default function ProductCard({product}:{product:ProductCardData}) {
+  const displayImage = basalamProductImage(product) || product.image;
   return <article className="product-card">
     <Link href={"/product/"+product.slug} className="product-media">
-      {product.image?<SafeProductImage src={product.image} alt={product.name} fallback="تصویر محصول به‌زودی اضافه می‌شود"/>:<span className="product-fallback">{product.kind==="PACK"?"پک ریشه":product.name.slice(0,1)}</span>}
+      {displayImage?<SafeProductImage src={displayImage} alt={product.name} fallback="تصویر محصول به‌زودی اضافه می‌شود"/>:<span className="product-fallback">{product.kind==="PACK"?"پک ریشه":product.name.slice(0,1)}</span>}
       {product.kind==="PACK"?<em>پک پیشنهادی</em>:product.category&&<em>{product.category.name}</em>}
     </Link>
     <div className="product-body">
