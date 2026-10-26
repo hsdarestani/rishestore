@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { basalamProductImage } from "@/lib/basalam-product-media";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export async function GET() {
   });
 
   const items = products.map((p) => {
+    const displayImage = basalamProductImage(p) || p.image;
     const availability = p.stock > 0 ? "in stock" : p.allowBackorder ? "preorder" : "out of stock";
     return `
       <item>
@@ -27,7 +29,7 @@ export async function GET() {
         <title>${esc(p.name)}</title>
         <description>${esc(p.shortDescription || p.description)}</description>
         <link>${esc(base + "/product/" + p.slug)}</link>
-        ${p.image ? `<g:image_link>${esc(p.image.startsWith("http") ? p.image : base + p.image)}</g:image_link>` : ""}
+        ${displayImage ? `<g:image_link>${esc(displayImage.startsWith("http") ? displayImage : base + displayImage)}</g:image_link>` : ""}
         <g:availability>${availability}</g:availability>
         <g:price>${Math.trunc(p.price * 10)} IRR</g:price>
         <g:brand>ریشه</g:brand>
