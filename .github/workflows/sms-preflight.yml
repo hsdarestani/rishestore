@@ -1,0 +1,20 @@
+name: Rishe SMS configuration preflight
+on:
+  push:
+    branches: [ops/rishe-sms-preflight]
+    paths: [.github/workflows/sms-preflight.yml]
+permissions: {}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check required configuration
+        env:
+          SMSIR_API: ${{ secrets.SMSIR_API }}
+        run: |
+          if [ -z "$SMSIR_API" ]; then
+            echo "::error::SMSIR_API is unavailable to this workflow"
+            exit 1
+          fi
+          echo "SMSIR_API is available to this workflow"
