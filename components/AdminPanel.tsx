@@ -311,6 +311,7 @@ export default function AdminPanel({ data, settings }: { data: AdminData; settin
             <ErpForm action="manual-sale.create"><div className="form-grid"><label>کانال<select name="channel"><option value="event">ایونت</option><option value="shop">دکان</option><option value="phone">تلفنی</option><option value="b2b">B2B</option></select></label><label>نام ایونت<input name="eventName" /></label><label>انبار<select name="warehouseId"><option value="">بدون انبار</option>{warehouseOptions}</select></label><label>محصول<select name="productId" required><option value="">انتخاب</option>{productOptions}</select></label><label>تعداد<input name="quantity" type="number" min="1" required /></label><label>قیمت واحد<input name="unitPrice" type="number" min="0" /></label><label>نام مشتری<input name="customerName" /></label><label>موبایل<input name="phone" /></label><label>فروشنده<input name="seller" /></label><label>روش پرداخت<select name="paymentType"><option value="cash">نقد</option><option value="card">کارت</option><option value="gateway">درگاه</option></select></label></div></ErpForm>
           </Panel>
           <Panel title="آخرین مشتریان">
+            <a className="btn btn-primary btn-sm" href="/api/admin/customers/export" download>دانلود CSV همهٔ مشتریان</a>
             {(data.customers||[]).length ? <div className="erp-mini-list">{(data.customers||[]).slice(0,10).map((u:any)=><div key={u.id}><strong>{u.name}</strong><span>{u.phone}</span><b>{fa(u._count?.orders || 0)} سفارش</b></div>)}</div> : <Empty />}
           </Panel>
         </div>
