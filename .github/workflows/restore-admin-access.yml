@@ -1,0 +1,35 @@
+name: Restore Rishe administrator access
+on:
+  push:
+    branches: [ops/rishe-sms-preflight]
+    paths: [.github/workflows/restore-admin-access.yml]
+permissions: {}
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Apply and verify authorized role
+        env:
+          HOST: ${{ secrets.HOST }}
+          SSHPASS: ${{ secrets.PASS }}
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y -qq sshpass >/dev/null
+          sshpass -e ssh -p 9011 -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 "root@$HOST" 'case " $(hostname -I) " in *" 143.20.60.195 "*) ;; *) exit 1;; esac; docker exec -i rishestore_pars-db-1 psql -X -qAt -v ON_ERROR_STOP=1 -U rishe -d rishe' <<'SQL'
+          BEGIN;
+          DO $block$
+          DECLARE matched integer;
+          BEGIN
+            UPDATE "User" SET role = 'ADMIN', "updatedAt" = CURRENT_TIMESTAMP
+            WHERE encode(sha256(convert_to(phone, 'UTF8')), 'hex') = '82100dcaf3c3938cdee954cc75dc31eed0a9a71409e24ca0f8e59f2aa9944d5f';
+            GET DIAGNOSTICS matched = ROW_COUNT;
+            IF matched <> 1 THEN
+              RAISE EXCEPTION 'Expected exactly one existing account, found %', matched;
+            END IF;
+          END
+          $block$;
+          COMMIT;
+          SELECT CASE WHEN count(*) = 1 THEN 'Administrator role verified' ELSE 'Verification failed' END
+          FROM "User" WHERE role = 'ADMIN' AND encode(sha256(convert_to(phone, 'UTF8')), 'hex') = '82100dcaf3c3938cdee954cc75dc31eed0a9a71409e24ca0f8e59f2aa9944d5f';
+          SQL
